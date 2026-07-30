@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; script-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self'">
+  <title>Calendaria</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5B4AE8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Calendaria">
+</head>
+<body>
+
+<!-- ── SVG icon sprite ─────────────────────────────────────────────────── -->
+<svg style="display:none" aria-hidden="true">
+<defs>
+  <symbol id="ico-pencil"  viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="ico-list"    viewBox="0 0 24 24">
+    <line x1="9" y1="6"  x2="20" y2="6"/>
+    <line x1="9" y1="12" x2="20" y2="12"/>
+    <line x1="9" y1="18" x2="20" y2="18"/>
+    <circle cx="4" cy="6"  r="1.4" fill="currentColor" stroke="none"/>
+    <circle cx="4" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+    <circle cx="4" cy="18" r="1.4" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ico-brush"   viewBox="0 0 24 24">
+    <path d="M9.06 11.9 17.13 3.83a2.83 2.83 0 1 1 4 4L13.06 15.93"/>
+    <path d="M7.07 14.94C5.79 16.2 5 17 5 17s-1.7-.33-2.5-2.5c.83-.83 2.5-2.5 3.57-2.5 1.05 0 2 1 2 1Z"/>
+  </symbol>
+  <symbol id="ico-left"    viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="ico-right"   viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="ico-x"       viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="ico-plus"    viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="ico-check"   viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="ico-moon"    viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+  <symbol id="ico-sun"     viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1"    x2="12" y2="3"/>
+    <line x1="12" y1="21"   x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22"  x2="5.64"  y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1"  y1="12" x2="3"  y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
+    <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+  </symbol>
+  <symbol id="ico-eraser"  viewBox="0 0 24 24">
+    <path d="M20 20H7L3 16 14 5l7 7z"/>
+    <line x1="7" y1="14" x2="13" y2="20"/>
+  </symbol>
+  <symbol id="ico-trash"   viewBox="0 0 24 24">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+  </symbol>
+  <symbol id="ico-grip"   viewBox="0 0 24 24">
+    <circle cx="9"  cy="5"  r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="9"  cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="9"  cy="19" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="15" cy="5"  r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="15" cy="19" r="1.5" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ico-today"   viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/>
+    <line x1="8"  y1="2" x2="8"  y2="6"/>
+    <line x1="3"  y1="10" x2="21" y2="10"/>
+  </symbol>
+  <symbol id="ico-up"      viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+  <symbol id="ico-down"    viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="ico-finance" viewBox="0 0 24 24">
+    <rect x="2" y="7" width="20" height="14" rx="2"/>
+    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+    <circle cx="12" cy="14" r="2"/>
+  </symbol>
+</defs>
+</svg>
+
+<!-- ── App shell ───────────────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="app-name">Calend<em>aria</em></div>
+    <div class="topbar-right">
+      <button class="pill-btn" id="todayBtn">
+        <svg class="icon" width="14" height="14"><use href="#ico-today"/></svg>
+        Hoy
+      </button>
+      <button class="pill-btn" id="themeBtn">
+        <svg class="icon" width="14" height="14" id="themeIcon"><use href="#ico-moon"/></svg>
+        <span id="themeLabel">Oscuro</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main two-column layout -->
+  <div class="layout" id="layout">
+
+    <!-- Calendar column -->
+    <section class="cal-col">
+      <div class="month-nav">
+        <button class="nav-btn" id="prevBtn" aria-label="Mes anterior">
+          <svg class="icon" width="18" height="18"><use href="#ico-left"/></svg>
+        </button>
+        <h2 class="month-label">
+          <span id="monthName"></span><span class="yr" id="yearNum"></span>
+        </h2>
+        <button class="nav-btn" id="nextBtn" aria-label="Mes siguiente">
+          <svg class="icon" width="18" height="18"><use href="#ico-right"/></svg>
+        </button>
+      </div>
+
+      <div class="calendar">
+        <div class="weekdays">
+          <div class="wday">Dom</div><div class="wday">Lun</div><div class="wday">Mar</div>
+          <div class="wday">Mié</div><div class="wday">Jue</div><div class="wday">Vie</div>
+          <div class="wday">Sáb</div>
+        </div>
+        <div class="days" id="daysGrid"></div>
+      </div>
+    </section>
+
+    <!-- Right column: always visible, switches between home view and day panel -->
+    <div class="right-col" id="rightCol">
+
+      <!-- Home view: dashboard shown when no day is selected -->
+      <div class="home-view" id="homeView">
+        <div class="hv-card">
+
+          <!-- Date + stats header -->
+          <div class="hv-hdr">
+            <div class="hv-date-block">
+              <span class="hv-wkday" id="hvWeekday"></span>
+              <span class="hv-datestr" id="hvDateStr"></span>
+            </div>
+            <div class="hv-stats-row">
+              <div class="hv-stat">
+                <span class="hv-stat-val" id="hsTasksPending">0</span>
+                <span class="hv-stat-lbl">por hacer</span>
+              </div>
+              <div class="hv-stat done">
+                <span class="hv-stat-val" id="hsTasksDone">0</span>
+                <span class="hv-stat-lbl">hechas hoy</span>
+              </div>
+              <div class="hv-stat fin">
+                <span class="hv-stat-val" id="hsDayBalance">—</span>
+                <span class="hv-stat-lbl">saldo hoy</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scrollable body -->
+          <div class="hv-body">
+
+            <!-- Today's tasks -->
+            <div class="hv-section">
+              <div class="hv-section-hdr">
+                <span class="hv-section-title">Tareas de hoy</span>
+                <button class="hv-open-btn" id="hvOpenTodayBtn">Ver día</button>
+              </div>
+              <div class="hv-task-list" id="hsTodayList"></div>
+            </div>
+
+            <!-- Global pending tasks -->
+            <div class="hv-section">
+              <div class="hv-section-hdr">
+                <span class="hv-section-title">Sin fecha</span>
+                <button class="hs-add-btn" id="pendingAddBtn" title="Agregar tarea pendiente">
+                  <svg class="icon" width="12" height="12"><use href="#ico-plus"/></svg>
+                </button>
+              </div>
+              <p class="hv-hint" id="pendingHint" style="display:none">
+                Arrastra al calendario para asignar un día
+              </p>
+              <div class="pending-list" id="pendingList"></div>
+              <input class="pending-input" id="pendingInput"
+                placeholder="Escribe y presiona Enter..." style="display:none">
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Day panel: shown when a day is selected -->
+      <section class="panel-col" id="panelCol" aria-label="Panel del día">
+      <div class="panel">
+
+        <!-- Panel header -->
+        <div class="panel-hdr">
+          <div class="panel-date">
+            <span class="p-wkday" id="pWeekday"></span>
+            <span class="p-day"   id="pDayname"></span>
+          </div>
+          <div class="panel-hdr-right">
+            <span class="save-badge" id="saveBadge">
+              <svg class="icon" width="12" height="12"><use href="#ico-check"/></svg>
+              Guardado
+            </span>
+            <button class="close-btn" id="closeBtn" aria-label="Cerrar panel">
+              <svg class="icon" width="15" height="15"><use href="#ico-x"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="notes" role="tab" aria-selected="true">
+            <svg class="icon" width="13" height="13"><use href="#ico-pencil"/></svg>
+            Notas
+          </button>
+          <button class="tab" data-tab="check" role="tab" aria-selected="false">
+            <svg class="icon" width="13" height="13"><use href="#ico-list"/></svg>
+            Lista
+          </button>
+          <button class="tab" data-tab="draw" role="tab" aria-selected="false">
+            <svg class="icon" width="13" height="13"><use href="#ico-brush"/></svg>
+            Dibujo
+          </button>
+          <button class="tab" data-tab="finance" role="tab" aria-selected="false">
+            <svg class="icon" width="13" height="13"><use href="#ico-finance"/></svg>
+            Finanzas
+          </button>
+        </div>
+
+        <!-- Notes -->
+        <div class="tab-body active" id="tab-notes" role="tabpanel">
+          <textarea class="notes-ta" id="notesArea"
+            placeholder="Escribe tus notas para este día..."></textarea>
+        </div>
+
+        <!-- Checklist -->
+        <div class="tab-body" id="tab-check" role="tabpanel">
+          <div class="checklist" id="checklist"></div>
+          <button class="add-task-btn" id="addTaskBtn">
+            <svg class="icon" width="13" height="13"><use href="#ico-plus"/></svg>
+            Agregar tarea
+          </button>
+        </div>
+
+        <!-- Drawing -->
+        <div class="tab-body draw-tab" id="tab-draw" role="tabpanel">
+          <div class="draw-toolbar">
+            <div class="color-group">
+              <button class="clr active" style="background:#5B4AE8" data-c="#5B4AE8" title="Violeta"></button>
+              <button class="clr" style="background:#F0604A" data-c="#F0604A" title="Rojo"></button>
+              <button class="clr" style="background:#2ECC8A" data-c="#2ECC8A" title="Verde"></button>
+              <button class="clr" style="background:#F5A623" data-c="#F5A623" title="Naranja"></button>
+              <button class="clr" style="background:#3B82F6" data-c="#3B82F6" title="Azul"></button>
+              <button class="clr" style="background:#EC4899" data-c="#EC4899" title="Rosa"></button>
+              <button class="clr" style="background:#1F1B2E" data-c="#1F1B2E" title="Negro"></button>
+              <button class="clr" style="background:#FFFFFF;outline:1.5px solid #ccc;outline-offset:-1px"
+                data-c="#FFFFFF" title="Blanco"></button>
+            </div>
+            <div class="tool-sep"></div>
+            <div class="size-group">
+              <button class="sz-btn active" data-s="2"  title="Trazo fino">S</button>
+              <button class="sz-btn"        data-s="5"  title="Trazo medio">M</button>
+              <button class="sz-btn"        data-s="12" title="Trazo grueso">L</button>
+            </div>
+            <div class="tool-sep"></div>
+            <button class="tool-btn" id="eraserBtn" title="Borrador">
+              <svg class="icon" width="14" height="14"><use href="#ico-eraser"/></svg>
+            </button>
+            <button class="tool-btn danger" id="clearBtn" title="Limpiar">
+              <svg class="icon" width="14" height="14"><use href="#ico-trash"/></svg>
+              Limpiar
+            </button>
+          </div>
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="drawCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Finance -->
+        <div class="tab-body fin-tab" id="tab-finance" role="tabpanel">
+
+          <!-- Global balance card -->
+          <div class="fin-balance">
+            <div class="fin-balance-left">
+              <span class="fin-balance-label">Saldo actual</span>
+              <span class="fin-balance-amount" id="finBalanceTotal">S/. 0.00</span>
+            </div>
+            <div class="fin-balance-right">
+              <div class="fin-sub ingreso">
+                <svg class="icon" width="11" height="11"><use href="#ico-up"/></svg>
+                <span id="finTotalIn">S/. 0.00</span>
+              </div>
+              <div class="fin-sub egreso">
+                <svg class="icon" width="11" height="11"><use href="#ico-down"/></svg>
+                <span id="finTotalOut">S/. 0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add transaction form -->
+          <div class="fin-form">
+            <div class="fin-toggles">
+              <div class="fin-toggle-group">
+                <button class="fin-type active" data-type="ingreso">
+                  <svg class="icon" width="12" height="12"><use href="#ico-up"/></svg>
+                  Ingreso
+                </button>
+                <button class="fin-type" data-type="egreso">
+                  <svg class="icon" width="12" height="12"><use href="#ico-down"/></svg>
+                  Egreso
+                </button>
+              </div>
+              <div class="fin-toggle-group">
+                <button class="fin-method active" data-method="digital">Digital</button>
+                <button class="fin-method" data-method="físico">Físico</button>
+              </div>
+            </div>
+            <div class="fin-inputs">
+              <div class="fin-amount-wrap">
+                <span class="fin-currency">S/.</span>
+                <input type="number" id="txAmount" class="fin-amount"
+                  placeholder="0.00" min="0" step="0.01">
+              </div>
+              <input type="text" id="txDesc" class="fin-desc"
+                placeholder="Descripción...">
+              <button class="fin-add-btn" id="txAddBtn" title="Agregar movimiento">
+                <svg class="icon" width="15" height="15"><use href="#ico-plus"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Day transaction list -->
+          <div class="fin-list-section">
+            <div class="fin-list-hdr">
+              <span>Movimientos del día</span>
+              <span class="fin-day-net" id="finDayNet"></span>
+            </div>
+            <div class="fin-list" id="txList"></div>
+          </div>
+
+        </div>
+
+      </div><!-- /panel -->
+    </section><!-- /panel-col -->
+
+    </div><!-- /right-col -->
+
+  </div><!-- /layout -->
+</div><!-- /page -->
+
+<!-- Auth overlay: solo visible en browser (PWA) cuando no hay sesion -->
+<div class="auth-overlay" id="authOverlay" style="display:none" aria-modal="true" role="dialog">
+  <div class="auth-card">
+    <div class="auth-logo">Calend<em>aria</em></div>
+    <p class="auth-sub">Inicia sesion para sincronizar tus datos</p>
+    <form id="authForm" autocomplete="on" novalidate>
+      <input class="auth-input" type="email"    id="authEmail" placeholder="Correo electronico" autocomplete="email"     required>
+      <input class="auth-input" type="password" id="authPass"  placeholder="Contrasena"          autocomplete="current-password" required>
+      <button class="auth-btn primary" type="submit" id="authSubmitBtn">Iniciar sesion</button>
+      <button class="auth-btn secondary" type="button" id="authToggleBtn">Crear cuenta nueva</button>
+    </form>
+    <p class="auth-error" id="authError"></p>
+  </div>
+</div>
+
+<script src="vendor/supabase.js"></script>
+<script src="config.js"></script>
+<script src="supabase-layer.js"></script>
+<script src="app.js"></script>
+<script>
+  // Registro del service worker (solo en browser, no en Electron)
+  if ('serviceWorker' in navigator && !window.api?.__isElectron) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>

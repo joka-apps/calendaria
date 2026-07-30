@@ -1,0 +1,22 @@
+{
+  "name": "calendaria",
+  "version": "1.0.0",
+  "description": "Calendario personal con notas, listas y dibujos",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "build": {
+    "appId": "com.joelleon.calendaria",
+    "productName": "Calendaria",
+    "win": {
+      "icon": "Calendaria.ico"
+    },
+    "mac": {
+      "icon": "Calendaria.png"
+    }
+  }
+}
