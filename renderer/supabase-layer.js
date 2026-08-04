@@ -38,8 +38,8 @@
 
   // ── Supabase data helpers ─────────────────────────────────────────────────
   async function uid() {
-    const { data: { user } } = await sb.auth.getUser();
-    return user?.id ?? null;
+    const { data: { session } } = await sb.auth.getSession();
+    return session?.user?.id ?? null;
   }
 
   async function fetchAll() {

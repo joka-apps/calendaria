@@ -1081,10 +1081,10 @@ function showAuthOverlay() {
   curY = now.getFullYear();
   curM = now.getMonth();
 
-  // En browser (PWA): verificar autenticacion antes de cargar datos
-  if (window.WebAuth && !window.api.__isElectron) {
-    const user = await window.WebAuth.getUser().catch(() => null);
-    if (!user) await showAuthOverlay();
+  // Si Supabase esta configurado (PWA o Electron con sync): verificar sesion
+  if (window.WebAuth) {
+    const { data: { session } } = await window.WebAuth.sb.auth.getSession();
+    if (!session) await showAuthOverlay();
   }
 
   // Cargar datos y preferencias
