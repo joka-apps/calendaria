@@ -1,16 +1,15 @@
 'use strict';
 
 // supabase-layer.js
-// Corre en Electron Y en browser.
-// - Si credentials no estan configuradas: no hace nada (Electron funciona local-only).
-// - En Electron: envuelve window.api para push a Supabase despues de cada save;
-//   expone window.api._pullRemote() para sincronizar al arrancar.
-// - En browser (PWA): crea window.api completo respaldado por Supabase.
+// En Electron: envuelve window.api para que getData() ya incluya datos de Supabase,
+//   y cada save va a local + Supabase simultaneamente.
+// En browser (PWA): crea window.api completo respaldado por Supabase.
+// Si credentials no estan configuradas, no hace nada.
 
 (function () {
   const url  = window.SUPA_URL  || '';
   const anon = window.SUPA_ANON || '';
-  if (!url || url.includes('TU-PROYECTO')) return; // credenciales no configuradas
+  if (!url || url.includes('TU-PROYECTO')) return;
 
   const { createClient } = window.supabase;
   const sb = createClient(url, anon);
@@ -18,10 +17,6 @@
   // ── Auth helpers ──────────────────────────────────────────────────────────
   window.WebAuth = {
     sb,
-    async getUser() {
-      const { data: { user } } = await sb.auth.getUser();
-      return user;
-    },
     async signIn(email, password) {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -44,12 +39,12 @@
 
   async function fetchAll() {
     const id = await uid();
-    if (!id) return {};
+    if (!id) return null; // null = no autenticado
     const { data, error } = await sb
       .from('calendar_data')
       .select('key, data')
       .eq('user_id', id);
-    if (error) throw error;
+    if (error) { console.warn('[supa] fetchAll error:', error.message); return null; }
     const result = {};
     for (const row of (data ?? [])) result[row.key] = row.data;
     return result;
@@ -88,47 +83,48 @@
   // ── Electron mode: wrap existing window.api ───────────────────────────────
   if (window.api) {
     window.api.__isElectron = true;
-    const orig = {
-      saveDay:     window.api.saveDay.bind(window.api),
-      savePending: window.api.savePending.bind(window.api),
-      savePrefs:   window.api.savePrefs.bind(window.api),
+
+    const origGetData  = window.api.getData.bind(window.api);
+    const origSaveDay  = window.api.saveDay.bind(window.api);
+    const origSavePend = window.api.savePending.bind(window.api);
+    const origSavePref = window.api.savePrefs.bind(window.api);
+
+    // getData: carga local primero, luego reemplaza con Supabase si hay sesion
+    window.api.getData = async () => {
+      const local = await origGetData();
+      try {
+        const remote = await fetchAll();
+        if (remote) return Object.assign(local || {}, remote); // Supabase gana
+      } catch (e) {
+        console.warn('[supa] getData remote failed:', e.message);
+      }
+      return local || {};
     };
 
+    // saves: local + Supabase en paralelo
     window.api.saveDay = async (key, data) => {
-      await orig.saveDay(key, data);
-      upsertKey(key, data).catch(() => {});
+      await origSaveDay(key, data);
+      upsertKey(key, data).catch(e => console.warn('[supa] saveDay:', e.message));
     };
     window.api.savePending = async (tasks) => {
-      await orig.savePending(tasks);
+      await origSavePend(tasks);
       upsertKey('__pending__', tasks).catch(() => {});
     };
     window.api.savePrefs = async (prefs) => {
-      await orig.savePrefs(prefs);
+      await origSavePref(prefs);
       upsertPrefs(prefs).catch(() => {});
     };
 
-    // Called in init() after local load to merge remote data
-    window.api._pullRemote = async () => {
-      try {
-        const user = await window.WebAuth.getUser();
-        if (!user) return null;
-        return await fetchAll();
-      } catch (e) {
-        console.warn('[supa] pull failed (offline?):', e.message);
-        return null;
-      }
-    };
-
-    return; // done for Electron
+    return;
   }
 
-  // ── Browser (PWA) mode: create window.api backed by Supabase ─────────────
+  // ── Browser (PWA) mode: window.api respaldado por Supabase ───────────────
   window.api = {
-    getData:     fetchAll,
+    getData:     async () => (await fetchAll()) ?? {},
     saveDay:     (key, data) => upsertKey(key, data),
-    getDrawing:  async () => null,           // dibujos no sincronizados aun
+    getDrawing:  async () => null,
     saveDrawing: async () => {},
-    savePending: (tasks)    => upsertKey('__pending__', tasks),
+    savePending: (tasks) => upsertKey('__pending__', tasks),
     getPrefs:    fetchPrefs,
     savePrefs:   upsertPrefs,
   };

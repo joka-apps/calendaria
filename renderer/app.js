@@ -1097,17 +1097,6 @@ function showAuthOverlay() {
   allData = data || {};
   pending = allData['__pending__'] || [];
 
-  // En Electron con Supabase configurado: merge datos remotos al arrancar
-  if (window.api._pullRemote) {
-    window.api._pullRemote().then(remote => {
-      if (!remote) return;
-      Object.assign(allData, remote);
-      pending = allData['__pending__'] || pending;
-      renderCal();
-      renderHomeStats();
-    });
-  }
-
   const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const useDark = prefs.theme === 'dark' || (prefs.theme !== 'light' && sysDark);
   if (useDark) applyTheme(true);
