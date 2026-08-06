@@ -1085,6 +1085,8 @@ function showAuthOverlay() {
   if (window.WebAuth) {
     const { data: { session } } = await window.WebAuth.sb.auth.getSession();
     if (!session) await showAuthOverlay();
+    document.getElementById('logoutBtn').style.display = '';
+    document.getElementById('logoutBtn').addEventListener('click', () => window.WebAuth.signOut());
   }
 
   // Cargar datos y preferencias
