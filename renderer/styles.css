@@ -413,6 +413,8 @@ svg.icon {
   min-height: 0;
   animation: tabFade .2s var(--ease) both;
 }
+/* Canvas glitch fix: draw tab uses opacity-only animation (no transform) */
+#tab-draw.active { animation: fadeIn .2s var(--ease) both; }
 .tab-body.active { display: flex; }
 @keyframes tabFade {
   from { opacity: 0; transform: translateY(5px); }

@@ -270,17 +270,12 @@ document.querySelectorAll('.tab').forEach(tab => {
     }
 
     if (tab.dataset.tab === 'draw') {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        resizeCanvas(false);
-        if (drawingSnap) {
-          const img = new Image();
-          img.onload = () => {
-            const dpr = window.devicePixelRatio || 1;
-            ctx.drawImage(img, 0, 0, drawCanvas.width / dpr, drawCanvas.height / dpr);
-          };
-          img.src = drawingSnap;
-        }
-      }));
+      const drawBody = document.getElementById('tab-draw');
+      const onAnimEnd = () => {
+        drawBody.removeEventListener('animationend', onAnimEnd);
+        loadDrawingOnCanvas();
+      };
+      drawBody.addEventListener('animationend', onAnimEnd);
     }
   });
 });
@@ -1101,7 +1096,12 @@ function showAuthOverlay() {
     renderCal();
     renderHomeStats();
     // Si el dia abierto es el que cambio, recargar el panel
-    if (selDay && selDay.key === key) openDay(selDay.y, selDay.m, selDay.d);
+    // pero no si el usuario esta editando activamente (evita resetear mientras escribe)
+    if (selDay && selDay.key === key) {
+      const ae = document.activeElement;
+      const editing = ae && (ae === notesArea || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || !!ae.closest('#checklist'));
+      if (!editing) openDay(selDay.y, selDay.m, selDay.d);
+    }
   });
 
   // Cargar datos y preferencias
