@@ -1081,13 +1081,28 @@ function showAuthOverlay() {
   curY = now.getFullYear();
   curM = now.getMonth();
 
-  // Si Supabase esta configurado (PWA o Electron con sync): verificar sesion
+  // Si Supabase esta configurado: verificar sesion y arrancar sync en tiempo real
   if (window.WebAuth) {
     const { data: { session } } = await window.WebAuth.sb.auth.getSession();
     if (!session) await showAuthOverlay();
     document.getElementById('logoutBtn').style.display = '';
     document.getElementById('logoutBtn').addEventListener('click', () => window.WebAuth.signOut());
+    window.WebAuth.startSync(); // suscripcion realtime
   }
+
+  // Cambio remoto recibido via Realtime
+  window.addEventListener('supa-sync', e => {
+    const { key, data } = e.detail;
+    allData[key] = data;
+    if (key === '__pending__') {
+      pending = Array.isArray(data) ? data : [];
+      renderPending();
+    }
+    renderCal();
+    renderHomeStats();
+    // Si el dia abierto es el que cambio, recargar el panel
+    if (selDay && selDay.key === key) openDay(selDay.y, selDay.m, selDay.d);
+  });
 
   // Cargar datos y preferencias
   const [data, prefs] = await Promise.all([

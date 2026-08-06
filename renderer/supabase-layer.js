@@ -29,6 +29,24 @@
       await sb.auth.signOut();
       location.reload();
     },
+    // Suscripcion en tiempo real — llama desde app.js despues de autenticar
+    async startSync() {
+      const id = await uid();
+      if (!id) return;
+      sb.channel('cal_' + id)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'calendar_data',
+          filter: `user_id=eq.${id}`,
+        }, payload => {
+          if (!payload.new) return;
+          window.dispatchEvent(new CustomEvent('supa-sync', {
+            detail: { key: payload.new.key, data: payload.new.data },
+          }));
+        })
+        .subscribe();
+    },
   };
 
   // ── Supabase data helpers ─────────────────────────────────────────────────
