@@ -1,10 +1,11 @@
 'use strict';
 
-const CACHE_NAME = 'calendaria-v1';
+const CACHE_NAME = 'calendaria-v2';
 const SHELL = [
   '/',
   '/index.html',
   '/styles.css',
+  '/plans.js',
   '/app.js',
   '/config.js',
   '/vendor/supabase.js',

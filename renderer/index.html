@@ -81,6 +81,13 @@
     <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
     <circle cx="12" cy="14" r="2"/>
   </symbol>
+  <symbol id="ico-nodes" viewBox="0 0 24 24">
+    <rect x="1"  y="9"  width="8" height="6" rx="1.5"/>
+    <rect x="15" y="3"  width="8" height="6" rx="1.5"/>
+    <rect x="15" y="15" width="8" height="6" rx="1.5"/>
+    <line x1="9" y1="12" x2="15" y2="6"/>
+    <line x1="9" y1="12" x2="15" y2="18"/>
+  </symbol>
 </defs>
 </svg>
 
@@ -91,6 +98,10 @@
   <header class="topbar">
     <div class="app-name">Calend<em>aria</em></div>
     <div class="topbar-right">
+      <button class="pill-btn" id="planesBtn">
+        <svg class="icon" width="14" height="14"><use href="#ico-nodes"/></svg>
+        Planes
+      </button>
       <button class="pill-btn" id="todayBtn">
         <svg class="icon" width="14" height="14"><use href="#ico-today"/></svg>
         Hoy
@@ -354,6 +365,51 @@
     </div><!-- /right-col -->
 
   </div><!-- /layout -->
+
+  <!-- Plans view: ocupa el mismo espacio que layout, toggle con el boton Planes -->
+  <div class="plans-view" id="plansView">
+
+    <!-- Sidebar: lista de planes -->
+    <aside class="plans-sidebar">
+      <div class="plans-sidebar-hdr">
+        <span class="plans-sidebar-title">Planes</span>
+        <button class="plans-new-btn" id="plnNewBtn" title="Nuevo plan">
+          <svg class="icon" width="13" height="13"><use href="#ico-plus"/></svg>
+        </button>
+      </div>
+      <ul class="plans-list" id="plansList"></ul>
+    </aside>
+
+    <!-- Canvas area -->
+    <div class="plans-main">
+
+      <!-- Toolbar -->
+      <div class="plans-toolbar">
+        <span class="plan-header" id="planHeader">Selecciona un plan</span>
+        <div class="plans-tb-btns">
+          <button class="pln-btn" id="plnTaskBtn" title="Agregar tarea (clic en el canvas)">Tarea</button>
+          <button class="pln-btn pln-gw-btn" id="plnAndBtn" title="Compuerta Y — todas las ramas deben completarse">Y</button>
+          <button class="pln-btn pln-gw-btn" id="plnOrBtn"  title="Compuerta O — cualquier rama es suficiente">O</button>
+          <div class="pln-sep"></div>
+          <button class="pln-btn pln-danger" id="plnDelBtn" title="Eliminar seleccionado (Supr)">
+            <svg class="icon" width="13" height="13"><use href="#ico-trash"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas infinito -->
+      <div class="plans-wrap" id="plansWrap">
+        <div class="plans-world" id="plansWorld">
+          <svg class="plans-svg" id="plansSvg"></svg>
+        </div>
+        <div class="plans-empty" id="plansEmpty">
+          <span>Crea un plan en la lista o selecciona uno existente</span>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /plans-view -->
+
 </div><!-- /page -->
 
 <!-- Auth overlay: solo visible en browser (PWA) cuando no hay sesion -->
@@ -374,6 +430,7 @@
 <script src="vendor/supabase.js"></script>
 <script src="config.js"></script>
 <script src="supabase-layer.js"></script>
+<script src="plans.js"></script>
 <script src="app.js"></script>
 <script>
   // Registro del service worker (solo en browser, no en Electron)

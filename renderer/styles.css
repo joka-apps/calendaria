@@ -1155,6 +1155,240 @@ canvas {
 .auth-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
 .auth-error { font-size: 12.5px; color: var(--red); min-height: 18px; text-align: center; }
 
+/* ── Plans view ──────────────────────────────────────────────────────────── */
+.plans-view {
+  flex: 1; min-height: 0;
+  display: none;
+  background: var(--bg);
+}
+.plans-view.active { display: flex; }
+
+/* Sidebar */
+.plans-sidebar {
+  width: 210px; min-width: 160px;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+.plans-sidebar-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.plans-sidebar-title { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: .04em; text-transform: uppercase; }
+.plans-new-btn {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface2); border: none; cursor: pointer; color: var(--text2);
+  transition: background var(--dur), color var(--dur);
+}
+.plans-new-btn:hover { background: var(--accent); color: #fff; }
+.plans-list { flex: 1; overflow-y: auto; padding: 8px 0; margin: 0; list-style: none; }
+.pl-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; cursor: pointer;
+  transition: background var(--dur);
+  border-radius: 0;
+}
+.pl-item:hover { background: var(--surface2); }
+.pl-item.active { background: color-mix(in srgb, var(--pc) 12%, var(--bg)); }
+.pl-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  background: var(--pc);
+}
+.pl-name { flex: 1; font-size: 13.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-del {
+  width: 18px; height: 18px; border-radius: 4px; border: none;
+  background: transparent; color: var(--text3); cursor: pointer;
+  font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s, background .15s;
+}
+.pl-item:hover .pl-del { opacity: 1; }
+.pl-del:hover { background: var(--red); color: #fff; }
+
+/* Main canvas area */
+.plans-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* Toolbar */
+.plans-toolbar {
+  height: 46px; padding: 0 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.plan-header {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  border-left: 3px solid var(--pc, var(--accent));
+  padding-left: 8px;
+}
+.plans-tb-btns { display: flex; align-items: center; gap: 4px; }
+.pln-btn {
+  height: 28px; padding: 0 11px; border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--text); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.pln-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pln-btn.pln-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pln-gw-btn { font-size: 13px; min-width: 34px; justify-content: center; }
+.pln-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.pln-danger:hover { border-color: var(--red); color: var(--red); }
+
+/* Canvas */
+.plans-wrap {
+  flex: 1; min-height: 0;
+  position: relative; overflow: hidden;
+  background: var(--bg);
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  cursor: default;
+}
+.plans-world {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+  width: 0; height: 0;
+}
+.plans-svg {
+  position: absolute; top: 0; left: 0;
+  width: 1px; height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Empty state */
+.plans-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.plans-empty span {
+  font-size: 13.5px; color: var(--text3);
+  background: var(--surface);
+  padding: 10px 18px; border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* CSS variable for edge color */
+:root { --pln-edge: #94a3b8; }
+@media (prefers-color-scheme: dark) { :root { --pln-edge: #475569; } }
+:root[data-theme="light"] { --pln-edge: #94a3b8; }
+:root[data-theme="dark"]  { --pln-edge: #475569; }
+
+/* ── Nodos ────────────────────────────────────────────────────────────────── */
+.pn {
+  position: absolute;
+  user-select: none;
+  cursor: grab;
+}
+.pn:active { cursor: grabbing; }
+
+/* Task node */
+.pn-task {
+  border-radius: 10px;
+  border: 2px solid var(--pc);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  display: flex; flex-direction: column;
+  justify-content: center; padding: 0 12px 0 10px;
+  gap: 2px;
+  transition: box-shadow .15s;
+}
+.pn-task.pn-sel {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 35%, transparent);
+}
+.pn-title {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 130px;
+}
+.pn-date-lbl {
+  font-size: 11px; color: var(--pc); font-weight: 500;
+}
+.pn-cal-btn {
+  position: absolute; top: 5px; right: 6px;
+  width: 18px; height: 18px; border-radius: 4px; border: none;
+  background: transparent; color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s, color .15s;
+}
+.pn-task:hover .pn-cal-btn { opacity: 1; }
+.pn-cal-btn:hover { color: var(--pc); }
+
+/* Gateway node */
+.pn-gw {
+  display: flex; align-items: center; justify-content: center;
+}
+.pn-gw-inner {
+  width: 100%; height: 100%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .15s;
+}
+.pn-gw.pn-sel .pn-gw-inner { opacity: .85; outline: 3px solid var(--pc); outline-offset: 4px; }
+.pn-gw-and .pn-gw-inner { background: var(--pc); }
+.pn-gw-or  .pn-gw-inner { background: color-mix(in srgb, var(--pc) 18%, var(--bg)); border: 2px solid var(--pc); }
+.pn-gw-lbl {
+  font-size: 15px; font-weight: 800; color: #fff;
+  line-height: 1;
+}
+.pn-gw-or .pn-gw-lbl { color: var(--pc); }
+
+/* Handles de conexion */
+.pn-h {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  cursor: crosshair;
+  opacity: 0; transition: opacity .15s;
+  z-index: 2;
+}
+.pn:hover .pn-h { opacity: 1; }
+.pn-h-n { top: -5px;  left: calc(50% - 5px); }
+.pn-h-s { bottom: -5px; left: calc(50% - 5px); }
+.pn-h-e { right: -5px;  top: calc(50% - 5px); }
+.pn-h-w { left: -5px;   top: calc(50% - 5px); }
+
+/* Inline edit input */
+.pn-inp {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  background: transparent; border: none; outline: none;
+  width: 120px; padding: 0;
+}
+
+/* Date picker popup */
+.pln-dp {
+  position: fixed; z-index: 9990;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.14);
+}
+.pln-dp-inp {
+  font-size: 13px; color: var(--text);
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 6px 8px;
+}
+.pln-dp-inp:focus { border-color: var(--accent); outline: none; }
+.pln-dp-clr {
+  font-size: 12px; color: var(--text3); background: none;
+  border: none; cursor: pointer; text-align: left; padding: 0;
+}
+.pln-dp-clr:hover { color: var(--red); }
+
+/* Plan dots in calendar cells */
+.plan-dots-row {
+  display: flex; gap: 2px; justify-content: center; margin-top: 2px; flex-wrap: wrap;
+}
+.plan-cal-dot {
+  width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}
+
+/* Topbar active state for Planes button */
+#planesBtn.active { background: var(--accent); color: #fff; }
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .layout { flex-direction: column; overflow-y: auto; }
@@ -1162,4 +1396,5 @@ canvas {
   .right-col { min-height: 420px; }
   .panel-col { min-height: 420px; }
   .home-view { min-height: 380px; }
+  .plans-sidebar { width: 160px; }
 }

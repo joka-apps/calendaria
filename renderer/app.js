@@ -71,14 +71,16 @@ function renderCal() {
       curM === today.getMonth() &&
       curY === today.getFullYear();
     const isSel = selDay && selDay.d === d && selDay.m === curM && selDay.y === curY;
-    const key   = dateKey(curY, curM, d);
-    const dd    = allData[key] || {};
-    const dots  = {
+    const key       = dateKey(curY, curM, d);
+    const dd        = allData[key] || {};
+    const dots      = {
       note:  !!(dd.note && dd.note.trim()),
       check: !!(dd.tasks && dd.tasks.length > 0),
       draw:  !!dd.hasDrawing,
     };
-    daysGrid.appendChild(makeCell(d, false, isToday, isSel, dots, dd));
+    const planDate  = `${curY}-${String(curM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const planColors = (window.Plans?.getPlanDates() ?? {})[planDate] ?? [];
+    daysGrid.appendChild(makeCell(d, false, isToday, isSel, dots, dd, planColors));
   }
 
   // leading cells for next month
@@ -89,7 +91,7 @@ function renderCal() {
   }
 }
 
-function makeCell(d, other, isToday, isSel, dots, dd) {
+function makeCell(d, other, isToday, isSel, dots, dd, planColors = []) {
   const cell = document.createElement('div');
   cell.className =
     'day-cell' +
@@ -116,6 +118,19 @@ function makeCell(d, other, isToday, isSel, dots, dd) {
     if (dots.note || dots.check || dots.draw) {
       const tip = buildTooltip(dots, dd);
       cell.appendChild(tip);
+    }
+
+    // plan date indicators
+    if (planColors.length > 0) {
+      const planRow = document.createElement('div');
+      planRow.className = 'plan-dots-row';
+      planColors.forEach(c => {
+        const dot = document.createElement('span');
+        dot.className = 'plan-cal-dot';
+        dot.style.background = c;
+        planRow.appendChild(dot);
+      });
+      cell.appendChild(planRow);
     }
 
     cell.addEventListener('click', () => openDay(curY, curM, d));
@@ -1093,6 +1108,9 @@ function showAuthOverlay() {
       pending = Array.isArray(data) ? data : [];
       renderPending();
     }
+    if (key === '__plans__') {
+      window.Plans?.load(data);
+    }
     renderCal();
     renderHomeStats();
     // Si el dia abierto es el que cambio, recargar el panel
@@ -1104,6 +1122,9 @@ function showAuthOverlay() {
     }
   });
 
+  // Planes: re-render calendario cuando cambian fechas de nodos
+  window.addEventListener('plans-changed', () => renderCal());
+
   // Cargar datos y preferencias
   const [data, prefs] = await Promise.all([
     window.api.getData(),
@@ -1111,6 +1132,19 @@ function showAuthOverlay() {
   ]);
   allData = data || {};
   pending = allData['__pending__'] || [];
+
+  // Inicializar tablero de planes
+  window.Plans?.init();
+  window.Plans?.load(allData['__plans__'] ?? null);
+
+  // Boton Planes en topbar
+  document.getElementById('planesBtn')?.addEventListener('click', () => {
+    if (document.getElementById('plansView')?.classList.contains('active')) {
+      window.Plans?.closeView();
+    } else {
+      window.Plans?.openView();
+    }
+  });
 
   const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const useDark = prefs.theme === 'dark' || (prefs.theme !== 'light' && sysDark);
