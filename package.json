@@ -4,19 +4,39 @@
   "description": "Calendario personal con notas, listas y dibujos",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "npx serve renderer -p 3000",
+    "dist": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   },
   "build": {
     "appId": "com.joelleon.calendaria",
     "productName": "Calendaria",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**",
+      "package.json"
+    ],
     "win": {
-      "icon": "Calendaria.ico"
+      "icon": "Calendaria.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
-    "mac": {
-      "icon": "Calendaria.png"
+    "nsis": {
+      "oneClick": true,
+      "installerIcon": "Calendaria.ico",
+      "uninstallerIcon": "Calendaria.ico",
+      "shortcutName": "Calendaria"
     }
   }
 }

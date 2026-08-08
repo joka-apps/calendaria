@@ -1389,6 +1389,415 @@ canvas {
 /* Topbar active state for Planes button */
 #planesBtn.active { background: var(--accent); color: #fff; }
 
+/* Topbar active states */
+#finanzasBtn.active { background: var(--accent); color: #fff; }
+
+/* ── Finance global view ─────────────────────────────────────────────────── */
+.finance-view {
+  flex: 1; min-height: 0;
+  display: none;
+  background: var(--bg);
+  flex-direction: row;
+  overflow: hidden;
+}
+.finance-view.active { display: flex; }
+
+.fv-sidebar {
+  width: 300px; min-width: 240px; flex-shrink: 0;
+  border-right: 1.5px solid var(--border);
+  display: flex; flex-direction: column; gap: 0;
+  overflow-y: auto;
+  padding: 20px 16px;
+  gap: 18px;
+}
+
+.fv-balance-card {
+  background: var(--accent);
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.fv-balance-lbl {
+  font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  color: rgba(255,255,255,.7); text-transform: uppercase;
+}
+.fv-balance-amt {
+  font-size: 28px; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.fv-balance-sub {
+  display: flex; gap: 14px; margin-top: 4px;
+}
+.fv-sub {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: rgba(255,255,255,.8);
+  font-variant-numeric: tabular-nums;
+}
+.fv-sub.ingreso { color: #a8f8d8; }
+.fv-sub.egreso  { color: #ffa8b4; }
+
+.fv-form { display: flex; flex-direction: column; gap: 10px; }
+.fv-form-title {
+  font-size: 12px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.fv-toggles { display: flex; flex-direction: column; gap: 6px; }
+.fv-toggle-group {
+  display: flex; border-radius: 8px; overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+.fin-type, .fin-method {
+  flex: 1; padding: 7px 8px; font-size: 12px; font-weight: 600;
+  border: none; background: var(--surface); color: var(--text2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 4px; transition: background .15s, color .15s;
+}
+.fin-type + .fin-type,
+.fin-method + .fin-method { border-left: 1.5px solid var(--border); }
+.fin-type.active  { background: var(--accent); color: #fff; }
+.fin-method.active { background: var(--accent-bg); color: var(--accent); }
+
+.fv-inputs { display: flex; flex-direction: column; gap: 8px; }
+.fin-amount-wrap {
+  display: flex; align-items: center; gap: 6px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--surface); padding: 0 10px;
+  transition: border-color .15s;
+}
+.fin-amount-wrap.error { border-color: var(--red); }
+.fin-amount-wrap:focus-within { border-color: var(--accent); }
+.fin-currency { font-size: 12px; font-weight: 700; color: var(--text2); }
+.fin-amount {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 15px; font-weight: 600; color: var(--text);
+  padding: 8px 0; font-variant-numeric: tabular-nums;
+}
+.fv-desc, .fv-date {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text);
+  font-size: 13px; padding: 8px 10px; outline: none;
+  transition: border-color .15s;
+}
+.fv-desc:focus, .fv-date:focus { border-color: var(--accent); }
+.fv-date { color-scheme: light dark; }
+.fv-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 8px;
+  padding: 9px 14px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.fv-add-btn:hover { opacity: .88; }
+
+.fv-history {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  padding: 20px 16px;
+}
+.fv-history-title {
+  font-size: 12px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .05em;
+  margin-bottom: 14px;
+}
+.fv-history-list {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0;
+}
+.fv-day-group { margin-bottom: 18px; }
+.fv-day-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-bottom: 1.5px solid var(--border);
+  margin-bottom: 6px;
+}
+.fv-day-name { font-size: 12px; font-weight: 700; color: var(--text2); }
+.fv-day-net  {
+  font-size: 12px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.fv-day-net.positive { color: var(--green); }
+.fv-day-net.negative { color: var(--red); }
+.fv-empty {
+  padding: 40px 0; text-align: center;
+  font-size: 13px; color: var(--text2);
+}
+
+/* Transaction list items (shared by day panel and history) */
+.fin-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.fin-item:last-child { border-bottom: none; }
+.fin-item-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.fin-item-icon.ingreso { background: color-mix(in srgb, var(--green) 18%, var(--bg)); color: var(--green); }
+.fin-item-icon.egreso  { background: color-mix(in srgb, var(--red)   18%, var(--bg)); color: var(--red); }
+.fin-item-info {
+  flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.fin-item-desc  { font-size: 13px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-item-meta  { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.fin-method-badge {
+  font-size: 10px; font-weight: 600; border-radius: 4px; padding: 1px 5px;
+}
+.fin-method-badge.digital { background: var(--accent-bg); color: var(--accent); }
+.fin-method-badge.fisico  { background: var(--surface2); color: var(--text2); }
+.fin-item-amount {
+  font-size: 13px; font-weight: 700;
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.fin-item-amount.ingreso { color: var(--green); }
+.fin-item-amount.egreso  { color: var(--red); }
+.fin-item-del {
+  background: none; border: none; color: var(--text2);
+  padding: 4px; border-radius: 4px; opacity: 0; transition: opacity .15s;
+  display: flex; align-items: center;
+}
+.fin-item:hover .fin-item-del { opacity: 1; }
+.fin-item-del:hover { color: var(--red); }
+.fin-empty { padding: 24px 0; text-align: center; font-size: 13px; color: var(--text2); }
+
+/* ── Stickies board (day panel) ──────────────────────────────────────────── */
+.stickies-bar {
+  display: flex; gap: 6px; padding: 10px 16px 8px;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.sk-add-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 6px 10px;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.sk-add-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+.stickies-board {
+  flex: 1; position: relative; overflow: auto;
+  background: var(--bg);
+}
+.stickies-inner {
+  position: relative;
+  min-width: 800px; min-height: 600px;
+  width: 100%; height: 100%;
+}
+.stickies-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text2);
+  pointer-events: none;
+}
+
+/* Finance strip at bottom of panel */
+.day-fin-strip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
+  border-top: 1.5px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.dfs-stat {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dfs-stat.ingreso { color: var(--green); }
+.dfs-stat.egreso  { color: var(--red); }
+.dfs-sep { width: 1.5px; height: 14px; background: var(--border); margin: 0 2px; }
+.dfs-fin-btn {
+  margin-left: auto; display: flex; align-items: center; gap: 5px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 5px 10px;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: background .15s;
+}
+.dfs-fin-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+/* ── Sticky card ─────────────────────────────────────────────────────────── */
+.sc {
+  position: absolute;
+  width: 185px; min-height: 110px;
+  border-radius: 11px; box-shadow: var(--sh);
+  display: flex; flex-direction: column;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  transition: box-shadow .15s;
+  user-select: none;
+}
+.sc:hover { box-shadow: var(--sh-lg); }
+.sc-note    { border-top: 3px solid #F5A623; }
+.sc-list    { border-top: 3px solid #2ECC8A; }
+.sc-drawing { border-top: 3px solid #5B4AE8; }
+
+.sc-drag {
+  padding: 6px 8px 3px;
+  cursor: grab; color: var(--text2);
+  display: flex; align-items: center; justify-content: flex-end;
+  opacity: 0; transition: opacity .15s;
+}
+.sc:hover .sc-drag { opacity: 1; }
+.sc-drag:active { cursor: grabbing; }
+
+.sc-body {
+  flex: 1; padding: 4px 10px 8px; cursor: pointer;
+  overflow: hidden;
+}
+.sc-note-preview {
+  font-size: 12px; line-height: 1.5; color: var(--text);
+  display: -webkit-box; -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical; overflow: hidden;
+  word-break: break-word;
+}
+.sc-note-preview.empty { color: var(--text2); font-style: italic; }
+
+.sc-li-row {
+  display: flex; align-items: center; gap: 5px;
+  padding: 2px 0; font-size: 12px; color: var(--text);
+}
+.sc-li-row.done .sc-li-text { text-decoration: line-through; color: var(--text2); }
+.sc-li-cb {
+  width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--green);
+  background: var(--surface);
+}
+.sc-li-row.done .sc-li-cb { background: var(--green); border-color: var(--green); color: #fff; }
+.sc-li-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-li-more, .sc-li-empty {
+  font-size: 11px; color: var(--text2); margin-top: 3px;
+}
+.sc-li-empty { font-style: italic; }
+
+.sc-draw-thumb {
+  width: 100%; height: 80px; object-fit: contain;
+  background: var(--surface2); border-radius: 6px;
+  display: block;
+}
+.sc-draw-thumb.empty {
+  background: var(--surface2);
+  opacity: .4;
+}
+
+.sc-footer {
+  padding: 4px 10px 8px;
+  font-size: 10px; font-weight: 600;
+  color: var(--text2); text-transform: uppercase;
+  letter-spacing: .04em; cursor: pointer;
+}
+
+/* ── Sticky expand modals ────────────────────────────────────────────────── */
+.sk-modal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.sk-modal-bd {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(3px);
+}
+.sk-modal-card {
+  position: relative; z-index: 1;
+  background: var(--surface);
+  border-radius: 14px; box-shadow: var(--sh-lg);
+  width: 480px; max-width: 95vw; max-height: 85vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.sk-draw-card {
+  width: min(800px, 95vw); height: min(600px, 90vh);
+}
+
+.sk-modal-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.sk-modal-type {
+  font-size: 13px; font-weight: 700; color: var(--text);
+}
+.sk-modal-hdr-btns { display: flex; gap: 6px; }
+.sk-modal-del, .sk-modal-close {
+  background: none; border: none; color: var(--text2);
+  padding: 5px; border-radius: 6px;
+  cursor: pointer; display: flex; align-items: center;
+  transition: background .12s, color .12s;
+}
+.sk-modal-del:hover  { background: color-mix(in srgb, var(--red) 15%, var(--bg)); color: var(--red); }
+.sk-modal-close:hover { background: var(--surface2); color: var(--text); }
+
+.sk-modal-body {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.sk-note-ta {
+  flex: 1; resize: none; border: none; outline: none;
+  background: transparent; color: var(--text);
+  font-size: 14px; line-height: 1.65;
+  padding: 16px 18px;
+  font-family: inherit; min-height: 280px;
+}
+
+/* Checklist inside sticky modal */
+.sk-checklist { flex: 1; padding: 10px 16px; overflow-y: auto; }
+.sk-ci {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0;
+}
+.sk-ci input[type="checkbox"] {
+  width: 15px; height: 15px; cursor: pointer; flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.sk-ci.done .sk-ci-label {
+  text-decoration: line-through; color: var(--text2);
+}
+.sk-ci-label {
+  flex: 1; border: none; outline: none;
+  background: transparent; color: var(--text);
+  font-size: 14px; font-family: inherit;
+  padding: 2px 0;
+}
+.sk-ci-del {
+  background: none; border: none; color: var(--text2);
+  padding: 3px; border-radius: 4px; opacity: 0;
+  cursor: pointer; display: flex; align-items: center;
+  transition: opacity .12s;
+}
+.sk-ci:hover .sk-ci-del { opacity: 1; }
+.sk-ci-del:hover { color: var(--red); }
+.sk-ci-empty {
+  padding: 20px 0; text-align: center;
+  font-size: 13px; color: var(--text2);
+}
+.sk-add-task-btn {
+  display: flex; align-items: center; gap: 5px;
+  margin: 6px 16px 10px;
+  background: none; border: 1.5px dashed var(--border);
+  border-radius: 7px; padding: 7px 10px;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.sk-add-task-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Canvas in draw modal */
+.sk-draw-card .draw-toolbar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+}
+.sk-draw-card .canvas-wrap {
+  flex: 1; position: relative; background: var(--canvas-bg);
+  overflow: hidden;
+}
+.sk-draw-card canvas {
+  display: block; width: 100%; height: 100%;
+  cursor: crosshair;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .layout { flex-direction: column; overflow-y: auto; }

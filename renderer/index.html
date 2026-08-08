@@ -102,6 +102,10 @@
         <svg class="icon" width="14" height="14"><use href="#ico-nodes"/></svg>
         Planes
       </button>
+      <button class="pill-btn" id="finanzasBtn">
+        <svg class="icon" width="14" height="14"><use href="#ico-finance"/></svg>
+        Finanzas
+      </button>
       <button class="pill-btn" id="todayBtn">
         <svg class="icon" width="14" height="14"><use href="#ico-today"/></svg>
         Hoy
@@ -226,137 +230,43 @@
           </div>
         </div>
 
-        <!-- Tabs -->
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="notes" role="tab" aria-selected="true">
-            <svg class="icon" width="13" height="13"><use href="#ico-pencil"/></svg>
-            Notas
+        <!-- Stickies toolbar -->
+        <div class="stickies-bar">
+          <button class="sk-add-btn" id="addNoteBtn">
+            <svg class="icon" width="12" height="12"><use href="#ico-pencil"/></svg>
+            Nota
           </button>
-          <button class="tab" data-tab="check" role="tab" aria-selected="false">
-            <svg class="icon" width="13" height="13"><use href="#ico-list"/></svg>
+          <button class="sk-add-btn" id="addListBtn">
+            <svg class="icon" width="12" height="12"><use href="#ico-list"/></svg>
             Lista
           </button>
-          <button class="tab" data-tab="draw" role="tab" aria-selected="false">
-            <svg class="icon" width="13" height="13"><use href="#ico-brush"/></svg>
+          <button class="sk-add-btn" id="addDrawBtn">
+            <svg class="icon" width="12" height="12"><use href="#ico-brush"/></svg>
             Dibujo
           </button>
-          <button class="tab" data-tab="finance" role="tab" aria-selected="false">
-            <svg class="icon" width="13" height="13"><use href="#ico-finance"/></svg>
+        </div>
+
+        <!-- Stickies board (draggable sticky notes canvas) -->
+        <div class="stickies-board" id="stickiesBoard">
+          <div class="stickies-inner" id="stickiesInner"></div>
+          <div class="stickies-empty" id="stickiesEmpty">Sin notas. Agrega una nota, lista o dibujo.</div>
+        </div>
+
+        <!-- Finance strip (always visible at bottom of panel) -->
+        <div class="day-fin-strip">
+          <div class="dfs-stat ingreso">
+            <svg class="icon" width="11" height="11"><use href="#ico-up"/></svg>
+            <span id="fdayIn">0.00</span>
+          </div>
+          <div class="dfs-sep"></div>
+          <div class="dfs-stat egreso">
+            <svg class="icon" width="11" height="11"><use href="#ico-down"/></svg>
+            <span id="fdayOut">0.00</span>
+          </div>
+          <button class="dfs-fin-btn" id="fdayOpenFinBtn">
+            <svg class="icon" width="12" height="12"><use href="#ico-finance"/></svg>
             Finanzas
           </button>
-        </div>
-
-        <!-- Notes -->
-        <div class="tab-body active" id="tab-notes" role="tabpanel">
-          <textarea class="notes-ta" id="notesArea"
-            placeholder="Escribe tus notas para este día..."></textarea>
-        </div>
-
-        <!-- Checklist -->
-        <div class="tab-body" id="tab-check" role="tabpanel">
-          <div class="checklist" id="checklist"></div>
-          <button class="add-task-btn" id="addTaskBtn">
-            <svg class="icon" width="13" height="13"><use href="#ico-plus"/></svg>
-            Agregar tarea
-          </button>
-        </div>
-
-        <!-- Drawing -->
-        <div class="tab-body draw-tab" id="tab-draw" role="tabpanel">
-          <div class="draw-toolbar">
-            <div class="color-group">
-              <button class="clr active" style="background:#5B4AE8" data-c="#5B4AE8" title="Violeta"></button>
-              <button class="clr" style="background:#F0604A" data-c="#F0604A" title="Rojo"></button>
-              <button class="clr" style="background:#2ECC8A" data-c="#2ECC8A" title="Verde"></button>
-              <button class="clr" style="background:#F5A623" data-c="#F5A623" title="Naranja"></button>
-              <button class="clr" style="background:#3B82F6" data-c="#3B82F6" title="Azul"></button>
-              <button class="clr" style="background:#EC4899" data-c="#EC4899" title="Rosa"></button>
-              <button class="clr" style="background:#1F1B2E" data-c="#1F1B2E" title="Negro"></button>
-              <button class="clr" style="background:#FFFFFF;outline:1.5px solid #ccc;outline-offset:-1px"
-                data-c="#FFFFFF" title="Blanco"></button>
-            </div>
-            <div class="tool-sep"></div>
-            <div class="size-group">
-              <button class="sz-btn active" data-s="2"  title="Trazo fino">S</button>
-              <button class="sz-btn"        data-s="5"  title="Trazo medio">M</button>
-              <button class="sz-btn"        data-s="12" title="Trazo grueso">L</button>
-            </div>
-            <div class="tool-sep"></div>
-            <button class="tool-btn" id="eraserBtn" title="Borrador">
-              <svg class="icon" width="14" height="14"><use href="#ico-eraser"/></svg>
-            </button>
-            <button class="tool-btn danger" id="clearBtn" title="Limpiar">
-              <svg class="icon" width="14" height="14"><use href="#ico-trash"/></svg>
-              Limpiar
-            </button>
-          </div>
-          <div class="canvas-wrap" id="canvasWrap">
-            <canvas id="drawCanvas"></canvas>
-          </div>
-        </div>
-
-        <!-- Finance -->
-        <div class="tab-body fin-tab" id="tab-finance" role="tabpanel">
-
-          <!-- Global balance card -->
-          <div class="fin-balance">
-            <div class="fin-balance-left">
-              <span class="fin-balance-label">Saldo actual</span>
-              <span class="fin-balance-amount" id="finBalanceTotal">S/. 0.00</span>
-            </div>
-            <div class="fin-balance-right">
-              <div class="fin-sub ingreso">
-                <svg class="icon" width="11" height="11"><use href="#ico-up"/></svg>
-                <span id="finTotalIn">S/. 0.00</span>
-              </div>
-              <div class="fin-sub egreso">
-                <svg class="icon" width="11" height="11"><use href="#ico-down"/></svg>
-                <span id="finTotalOut">S/. 0.00</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add transaction form -->
-          <div class="fin-form">
-            <div class="fin-toggles">
-              <div class="fin-toggle-group">
-                <button class="fin-type active" data-type="ingreso">
-                  <svg class="icon" width="12" height="12"><use href="#ico-up"/></svg>
-                  Ingreso
-                </button>
-                <button class="fin-type" data-type="egreso">
-                  <svg class="icon" width="12" height="12"><use href="#ico-down"/></svg>
-                  Egreso
-                </button>
-              </div>
-              <div class="fin-toggle-group">
-                <button class="fin-method active" data-method="digital">Digital</button>
-                <button class="fin-method" data-method="físico">Físico</button>
-              </div>
-            </div>
-            <div class="fin-inputs">
-              <div class="fin-amount-wrap">
-                <span class="fin-currency">S/.</span>
-                <input type="number" id="txAmount" class="fin-amount"
-                  placeholder="0.00" min="0" step="0.01">
-              </div>
-              <input type="text" id="txDesc" class="fin-desc"
-                placeholder="Descripción...">
-              <button class="fin-add-btn" id="txAddBtn" title="Agregar movimiento">
-                <svg class="icon" width="15" height="15"><use href="#ico-plus"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Day transaction list -->
-          <div class="fin-list-section">
-            <div class="fin-list-hdr">
-              <span>Movimientos del día</span>
-              <span class="fin-day-net" id="finDayNet"></span>
-            </div>
-            <div class="fin-list" id="txList"></div>
-          </div>
-
         </div>
 
       </div><!-- /panel -->
@@ -409,6 +319,142 @@
 
     </div>
   </div><!-- /plans-view -->
+
+  <!-- Finance view: balance global + formulario + historial -->
+  <div class="finance-view" id="financeView">
+
+    <!-- Panel izquierdo: balance + formulario -->
+    <aside class="fv-sidebar">
+
+      <!-- Balance global -->
+      <div class="fv-balance-card">
+        <span class="fv-balance-lbl">Saldo actual</span>
+        <span class="fv-balance-amt" id="finBalanceTotal">S/. 0.00</span>
+        <div class="fv-balance-sub">
+          <span class="fv-sub ingreso">
+            <svg class="icon" width="11" height="11"><use href="#ico-up"/></svg>
+            <span id="finTotalIn">S/. 0.00</span>
+          </span>
+          <span class="fv-sub egreso">
+            <svg class="icon" width="11" height="11"><use href="#ico-down"/></svg>
+            <span id="finTotalOut">S/. 0.00</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Formulario de ingreso/egreso -->
+      <div class="fv-form">
+        <div class="fv-form-title">Nuevo movimiento</div>
+
+        <div class="fv-toggles">
+          <div class="fv-toggle-group">
+            <button class="fin-type active" data-type="ingreso">
+              <svg class="icon" width="12" height="12"><use href="#ico-up"/></svg>
+              Ingreso
+            </button>
+            <button class="fin-type" data-type="egreso">
+              <svg class="icon" width="12" height="12"><use href="#ico-down"/></svg>
+              Egreso
+            </button>
+          </div>
+          <div class="fv-toggle-group">
+            <button class="fin-method active" data-method="digital">Digital</button>
+            <button class="fin-method" data-method="físico">Físico</button>
+          </div>
+        </div>
+
+        <div class="fv-inputs">
+          <div class="fin-amount-wrap">
+            <span class="fin-currency">S/.</span>
+            <input type="number" id="txAmount" class="fin-amount"
+              placeholder="0.00" min="0" step="0.01">
+          </div>
+          <input type="text" id="txDesc" class="fv-desc"
+            placeholder="Descripción...">
+          <input type="date" id="txDate" class="fv-date">
+          <button class="fv-add-btn" id="txAddBtn">
+            <svg class="icon" width="14" height="14"><use href="#ico-plus"/></svg>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Panel derecho: historial por dia -->
+    <div class="fv-history">
+      <div class="fv-history-title">Historial</div>
+      <div class="fv-history-list" id="fvHistoryList"></div>
+    </div>
+
+  </div><!-- /finance-view -->
+
+<!-- Sticky expand modal (notes and lists) -->
+<div class="sk-modal" id="stickyModal" style="display:none">
+  <div class="sk-modal-bd" id="stickyModalBd"></div>
+  <div class="sk-modal-card" id="stickyModalCard">
+    <div class="sk-modal-hdr">
+      <span class="sk-modal-type" id="stickyModalType">Nota</span>
+      <div class="sk-modal-hdr-btns">
+        <button class="sk-modal-del" id="stickyModalDel" title="Eliminar">
+          <svg class="icon" width="13" height="13"><use href="#ico-trash"/></svg>
+        </button>
+        <button class="sk-modal-close" id="stickyModalClose" title="Cerrar">
+          <svg class="icon" width="14" height="14"><use href="#ico-x"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="sk-modal-body" id="stickyModalBody"></div>
+  </div>
+</div>
+
+<!-- Drawing expand modal -->
+<div class="sk-modal" id="drawStickyModal" style="display:none">
+  <div class="sk-modal-bd" id="drawStickyModalBd"></div>
+  <div class="sk-modal-card sk-draw-card" id="drawStickyModalCard">
+    <div class="sk-modal-hdr">
+      <span class="sk-modal-type">Dibujo</span>
+      <div class="sk-modal-hdr-btns">
+        <button class="sk-modal-del" id="drawStickyModalDel" title="Eliminar">
+          <svg class="icon" width="13" height="13"><use href="#ico-trash"/></svg>
+        </button>
+        <button class="sk-modal-close" id="drawStickyModalClose" title="Cerrar">
+          <svg class="icon" width="14" height="14"><use href="#ico-x"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="draw-toolbar" id="drawToolbar">
+      <div class="color-group">
+        <button class="clr active" style="background:#5B4AE8" data-c="#5B4AE8" title="Violeta"></button>
+        <button class="clr" style="background:#F0604A" data-c="#F0604A" title="Rojo"></button>
+        <button class="clr" style="background:#2ECC8A" data-c="#2ECC8A" title="Verde"></button>
+        <button class="clr" style="background:#F5A623" data-c="#F5A623" title="Naranja"></button>
+        <button class="clr" style="background:#3B82F6" data-c="#3B82F6" title="Azul"></button>
+        <button class="clr" style="background:#EC4899" data-c="#EC4899" title="Rosa"></button>
+        <button class="clr" style="background:#1F1B2E" data-c="#1F1B2E" title="Negro"></button>
+        <button class="clr" style="background:#FFFFFF;outline:1.5px solid #ccc;outline-offset:-1px"
+          data-c="#FFFFFF" title="Blanco"></button>
+      </div>
+      <div class="tool-sep"></div>
+      <div class="size-group">
+        <button class="sz-btn active" data-s="2"  title="Trazo fino">S</button>
+        <button class="sz-btn"        data-s="5"  title="Trazo medio">M</button>
+        <button class="sz-btn"        data-s="12" title="Trazo grueso">L</button>
+      </div>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="eraserBtn" title="Borrador">
+        <svg class="icon" width="14" height="14"><use href="#ico-eraser"/></svg>
+      </button>
+      <button class="tool-btn danger" id="clearBtn" title="Limpiar">
+        <svg class="icon" width="14" height="14"><use href="#ico-trash"/></svg>
+        Limpiar
+      </button>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="drawCanvas"></canvas>
+    </div>
+  </div>
+</div>
 
 </div><!-- /page -->
 
