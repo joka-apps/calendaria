@@ -29,6 +29,7 @@ let activeDrawSticky = null;   // sticky object for expanded drawing sticky
 
 // Save badge timer
 let saveBadgeTimer = null;
+let calDebounceTimer = null;
 
 // ── DOM references ─────────────────────────────────────────────────────────
 const layout        = document.getElementById('layout');
@@ -318,19 +319,28 @@ function buildStickyCard(s) {
     }
 
   } else if (s.type === 'drawing') {
+    const drawWrap = document.createElement('div');
+    drawWrap.className = 'sc-draw-wrap';
     const img = document.createElement('img');
     img.className = 'sc-draw-thumb';
-    img.alt = 'Dibujo';
+    img.alt = '';
+    img.style.display = 'none';
+    const ph = document.createElement('div');
+    ph.className = 'sc-draw-ph';
+    ph.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Sin dibujo</span>`;
+    drawWrap.appendChild(ph);
+    drawWrap.appendChild(img);
+    body.appendChild(drawWrap);
     const dk = s.drawingKey || selDay?.key;
     if (dk) {
       window.api.getDrawing(dk).then(url => {
-        if (url) img.src = url;
-        else img.classList.add('empty');
+        if (url) {
+          img.src = url;
+          img.style.display = '';
+          ph.style.display = 'none';
+        }
       });
-    } else {
-      img.classList.add('empty');
     }
-    body.appendChild(img);
   }
 
   // Footer
@@ -405,7 +415,8 @@ function saveStickiesForDay() {
   if (!allData[selDay.key]) allData[selDay.key] = {};
   allData[selDay.key].stickies = stickies;
   window.api.saveDay(selDay.key, allData[selDay.key]);
-  renderCal();
+  clearTimeout(calDebounceTimer);
+  calDebounceTimer = setTimeout(renderCal, 1200);
   flashSaved();
 }
 
@@ -537,8 +548,10 @@ function renderStickyChecklist(s, container) {
 
 function closeStickyModal() {
   stickyModal.style.display = 'none';
+  const id = activeStickyId;
   activeStickyId = null;
-  renderStickies();
+  const s = stickies.find(sk => sk.id === id);
+  if (s) refreshCard(s);
 }
 
 stickyModalClose.addEventListener('click', closeStickyModal);

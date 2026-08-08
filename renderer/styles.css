@@ -1670,14 +1670,20 @@ canvas {
 }
 .sc-li-empty { font-style: italic; }
 
+.sc-draw-wrap {
+  width: 100%; height: 80px; border-radius: 6px;
+  background: var(--surface2); overflow: hidden; position: relative;
+}
 .sc-draw-thumb {
-  width: 100%; height: 80px; object-fit: contain;
-  background: var(--surface2); border-radius: 6px;
+  width: 100%; height: 100%; object-fit: contain;
   display: block;
 }
-.sc-draw-thumb.empty {
-  background: var(--surface2);
-  opacity: .4;
+.sc-draw-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; opacity: .35;
+  font-size: .65rem; color: var(--text2);
 }
 
 .sc-footer {
