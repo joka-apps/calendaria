@@ -368,27 +368,24 @@
     if (!n || !el || el.dataset.editing) return;
 
     el.dataset.editing = '1';
-    el.style.visibility = 'hidden';
 
     const inp = document.createElement('input');
     inp.className = 'pn-inp';
     inp.value = n.title || '';
     inp.placeholder = 'Nombre...';
-    el.parentElement.insertBefore(inp, el);
+    el.replaceWith(inp); // ocupa exactamente el mismo lugar en el flex
     inp.focus();
     inp.select();
 
-    // Impedir que el clic dentro del input inicie arrastre del nodo
     inp.addEventListener('mousedown', ev => ev.stopPropagation());
     inp.addEventListener('click',     ev => ev.stopPropagation());
 
     function commit() {
-      inp.remove();
-      el.style.visibility = '';
-      delete el.dataset.editing;
       const v = inp.value.trim();
       n.title = v || n.title;
       el.textContent = n.title;
+      delete el.dataset.editing;
+      inp.replaceWith(el); // devuelve el titulo al mismo lugar
       persist();
     }
     inp.addEventListener('blur', commit);
