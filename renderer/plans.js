@@ -97,7 +97,12 @@
     persist();
     setTimeout(() => {
       const nameEl = $plansList?.querySelector('.pl-item.active .pl-name');
-      if (nameEl) startInline(nameEl, v => { p.title = v || p.title; renderSidebar(); if ($planHeader) $planHeader.textContent = p.title; persist(); });
+      if (nameEl) startInline(nameEl, v => {
+        p.title = v || p.title;
+        nameEl.textContent = p.title;
+        if ($planHeader) $planHeader.textContent = p.title;
+        persist();
+      });
     }, 40);
   }
 
@@ -222,6 +227,7 @@
       const title = document.createElement('div');
       title.className = 'pn-title';
       title.textContent = n.title || 'Tarea';
+      title.addEventListener('dblclick', ev => { ev.stopPropagation(); startEditTitle(n.id); });
       div.appendChild(title);
 
       if (n.date) {
@@ -237,8 +243,6 @@
       calBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
       calBtn.addEventListener('click', ev => { ev.stopPropagation(); openDatePicker(n, calBtn); });
       div.appendChild(calBtn);
-
-      div.addEventListener('dblclick', ev => { ev.stopPropagation(); startEditTitle(n.id); });
 
     } else {
       // Gateway: AND (Y) o OR (O)
@@ -265,6 +269,7 @@
 
     div.addEventListener('mousedown', ev => {
       if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn')) return;
+      if (ev.target.contentEditable === 'true') return; // no arrastrar mientras se edita
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
       const rect = $wrap.getBoundingClientRect();
@@ -342,10 +347,40 @@
 
   // ── Edicion de texto inline ────────────────────────────────────────────────
   function startEditTitle(id) {
-    const n   = active?.nodes.find(n => n.id === id);
-    const el  = $world?.querySelector('[data-node-id="' + id + '"] .pn-title');
+    const n  = active?.nodes.find(n => n.id === id);
+    const el = $world?.querySelector('[data-node-id="' + id + '"] .pn-title');
     if (!n || !el) return;
-    startInline(el, v => { n.title = v || n.title; persist(); redraw(); });
+    if (el.contentEditable === 'true') return;
+
+    const orig = n.title;
+    el.contentEditable = 'true';
+    el.focus();
+
+    // Select all text
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(range);
+
+    let done = false;
+    function commit() {
+      if (done) return;
+      done = true;
+      el.contentEditable = 'false';
+      const v = el.textContent.trim();
+      n.title = v || orig;
+      el.textContent = n.title;
+      persist();
+    }
+    function onKey(e) {
+      e.stopPropagation(); // evita Delete/Backspace del canvas mientras se escribe
+      if (e.key === 'Enter')  { e.preventDefault(); el.blur(); }
+      if (e.key === 'Escape') { el.textContent = orig; el.blur(); }
+    }
+    el.addEventListener('blur',    commit, { once: true });
+    el.addEventListener('keydown', onKey);
+    el.addEventListener('blur', () => el.removeEventListener('keydown', onKey), { once: true });
   }
 
   function startInline(el, onCommit) {
@@ -451,7 +486,7 @@
   function initKeyboard() {
     window.addEventListener('keydown', ev => {
       if (!$view?.classList.contains('active')) return;
-      if (ev.target.tagName === 'INPUT') return;
+      if (ev.target.tagName === 'INPUT' || ev.target.contentEditable === 'true') return;
       if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); deleteSelected(); }
       if (ev.key === 'Escape') { setMode(null); sel = null; drawEdges(); }
     });
@@ -476,7 +511,7 @@
         ev.stopPropagation();
         startInline(name, v => {
           p.title = v || p.title;
-          renderSidebar();
+          name.textContent = p.title;
           if (active?.id === p.id && $planHeader) $planHeader.textContent = p.title;
           persist();
         });

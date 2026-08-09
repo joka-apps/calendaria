@@ -1374,7 +1374,16 @@ canvas {
 .pn-title {
   font-size: 13px; font-weight: 600; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 130px;
+  max-width: 130px; border-radius: 4px;
+  cursor: default; user-select: none;
+  outline: none;
+}
+.pn-title[contenteditable="true"] {
+  cursor: text; user-select: text;
+  white-space: nowrap; overflow: visible; text-overflow: clip;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 1px 4px; margin: -1px -4px;
+  caret-color: var(--accent);
 }
 .pn-date-lbl {
   font-size: 11px; color: var(--pc); font-weight: 500;
