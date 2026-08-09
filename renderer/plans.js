@@ -244,6 +244,19 @@
       calBtn.addEventListener('click', ev => { ev.stopPropagation(); openDatePicker(n, calBtn); });
       div.appendChild(calBtn);
 
+      const delBtn = document.createElement('button');
+      delBtn.className = 'pn-del-btn';
+      delBtn.title = 'Eliminar tarea';
+      delBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      delBtn.addEventListener('click', ev => {
+        ev.stopPropagation();
+        active.nodes = active.nodes.filter(nd => nd.id !== n.id);
+        active.edges = active.edges.filter(e => e.from !== n.id && e.to !== n.id);
+        if (sel?.id === n.id) sel = null;
+        persist(); redraw(); notifyCal();
+      });
+      div.appendChild(delBtn);
+
     } else {
       // Gateway: AND (Y) o OR (O)
       div.className = 'pn pn-gw pn-gw-' + n.type + (isSel ? ' pn-sel' : '');
@@ -268,8 +281,8 @@
     });
 
     div.addEventListener('mousedown', ev => {
-      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn')) return;
-      if (ev.target.contentEditable === 'true') return; // no arrastrar mientras se edita
+      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn')) return;
+      if (ev.target.classList.contains('pn-inp')) return; // no arrastrar mientras se edita
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
       const rect = $wrap.getBoundingClientRect();
@@ -349,38 +362,38 @@
   function startEditTitle(id) {
     const n  = active?.nodes.find(n => n.id === id);
     const el = $world?.querySelector('[data-node-id="' + id + '"] .pn-title');
-    if (!n || !el) return;
-    if (el.contentEditable === 'true') return;
+    if (!n || !el || el.dataset.editing) return;
 
-    const orig = n.title;
-    el.contentEditable = 'true';
-    el.focus();
+    el.dataset.editing = '1';
+    el.style.visibility = 'hidden';
 
-    // Select all text
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    const s = window.getSelection();
-    s.removeAllRanges();
-    s.addRange(range);
+    const inp = document.createElement('input');
+    inp.className = 'pn-inp';
+    inp.value = n.title || '';
+    inp.placeholder = 'Nombre...';
+    el.parentElement.insertBefore(inp, el);
+    inp.focus();
+    inp.select();
 
-    let done = false;
+    // Impedir que el clic dentro del input inicie arrastre del nodo
+    inp.addEventListener('mousedown', ev => ev.stopPropagation());
+    inp.addEventListener('click',     ev => ev.stopPropagation());
+
     function commit() {
-      if (done) return;
-      done = true;
-      el.contentEditable = 'false';
-      const v = el.textContent.trim();
-      n.title = v || orig;
+      inp.remove();
+      el.style.visibility = '';
+      delete el.dataset.editing;
+      const v = inp.value.trim();
+      n.title = v || n.title;
       el.textContent = n.title;
       persist();
     }
-    function onKey(e) {
-      e.stopPropagation(); // evita Delete/Backspace del canvas mientras se escribe
-      if (e.key === 'Enter')  { e.preventDefault(); el.blur(); }
-      if (e.key === 'Escape') { el.textContent = orig; el.blur(); }
-    }
-    el.addEventListener('blur',    commit, { once: true });
-    el.addEventListener('keydown', onKey);
-    el.addEventListener('blur', () => el.removeEventListener('keydown', onKey), { once: true });
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter')  { e.preventDefault(); inp.blur(); }
+      if (e.key === 'Escape') { inp.value = n.title; inp.blur(); }
+    });
   }
 
   function startInline(el, onCommit) {
@@ -390,6 +403,9 @@
     inp.value = orig;
     el.replaceWith(inp);
     inp.focus(); inp.select();
+    // Evitar que el clic en el input dispare handlers del elemento padre
+    inp.addEventListener('mousedown', ev => ev.stopPropagation());
+    inp.addEventListener('click',     ev => ev.stopPropagation());
     const commit = () => { const v = inp.value.trim(); inp.replaceWith(el); onCommit(v); };
     inp.addEventListener('blur', commit);
     inp.addEventListener('keydown', e => {
