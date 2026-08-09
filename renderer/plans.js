@@ -227,7 +227,10 @@
       const title = document.createElement('div');
       title.className = 'pn-title';
       title.textContent = n.title || 'Tarea';
-      title.addEventListener('dblclick', ev => { ev.stopPropagation(); startEditTitle(n.id); });
+      title.style.cursor = 'text';
+      // Clic en el texto abre el editor; se bloquea el mousedown para no iniciar drag
+      title.addEventListener('mousedown', ev => ev.stopPropagation());
+      title.addEventListener('click', ev => { ev.stopPropagation(); startEditTitle(n.id); });
       div.appendChild(title);
 
       if (n.date) {
