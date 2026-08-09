@@ -795,6 +795,56 @@ function scheduleDrawSave() {
   }, 1000);
 }
 
+// ── Delete helpers ─────────────────────────────────────────────────────────
+async function deleteDay() {
+  if (!selDay) return;
+  const label = `${selDay.d} de ${MONTHS[selDay.m]} ${selDay.y}`;
+  if (!confirm(`Borrar todo el contenido del ${label}?\n\nEsta accion no se puede deshacer.`)) return;
+  const key = selDay.key;
+  const dd  = allData[key] || {};
+  for (const s of (dd.stickies || [])) {
+    if (s.type === 'drawing') {
+      const dk = s.drawingKey || key;
+      await window.api.saveDrawing(dk, null);
+    }
+  }
+  delete allData[key];
+  await window.api.saveDay(key, {});
+  closePanel();
+}
+
+function deleteMonth() {
+  const label = `${MONTHS[curM]} ${curY}`;
+  if (!confirm(`Borrar todos los datos de ${label}?\n\nEsta accion no se puede deshacer.`)) return;
+  const prefix = `${curY}-${String(curM + 1).padStart(2, '0')}-`;
+  const keys   = Object.keys(allData).filter(k => k.startsWith(prefix));
+  keys.forEach(k => { delete allData[k]; window.api.saveDay(k, {}); });
+  if (selDay && selDay.key.startsWith(prefix)) closePanel();
+  renderCal();
+  renderHomeStats();
+}
+
+function deleteAll() {
+  if (!confirm('Borrar TODOS los datos de Calendaria?\n\nEsta accion no se puede deshacer.')) return;
+  const dateKeys = Object.keys(allData).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+  dateKeys.forEach(k => { delete allData[k]; window.api.saveDay(k, {}); });
+  if (selDay) closePanel();
+  renderCal();
+  renderHomeStats();
+}
+
+// Cal opts dropdown toggle
+const calOptsBtn  = document.getElementById('calOptsBtn');
+const calOptsMenu = document.getElementById('calOptsMenu');
+calOptsBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  calOptsMenu.style.display = calOptsMenu.style.display === 'none' ? '' : 'none';
+});
+document.addEventListener('click', () => { calOptsMenu.style.display = 'none'; });
+document.getElementById('delMonthBtn').addEventListener('click', () => { calOptsMenu.style.display = 'none'; deleteMonth(); });
+document.getElementById('delAllBtn').addEventListener('click',   () => { calOptsMenu.style.display = 'none'; deleteAll(); });
+document.getElementById('delDayBtn').addEventListener('click', deleteDay);
+
 // ── Panel close & navigation ───────────────────────────────────────────────
 document.getElementById('closeBtn').addEventListener('click', closePanel);
 

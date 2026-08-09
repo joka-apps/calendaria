@@ -377,6 +377,34 @@ svg.icon {
 }
 .close-btn:hover { background: var(--red); color: #fff; }
 
+.del-day-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  background: transparent; border: none; border-radius: 8px;
+  color: var(--text2); cursor: pointer;
+  transition: background var(--dur), color var(--dur);
+}
+.del-day-btn:hover { background: var(--red); color: #fff; }
+
+/* Calendar opts dropdown */
+.cal-opts-wrap { position: relative; }
+.cal-opts-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  z-index: 50; min-width: 150px;
+}
+.cal-opts-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 10px;
+  background: none; border: none; border-radius: 7px;
+  font-size: .82rem; color: var(--text1); cursor: pointer;
+  text-align: left;
+  transition: background var(--dur), color var(--dur);
+}
+.cal-opts-item.danger:hover { background: var(--red); color: #fff; }
+
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
 .tabs {
   display: flex;

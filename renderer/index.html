@@ -88,6 +88,11 @@
     <line x1="9" y1="12" x2="15" y2="6"/>
     <line x1="9" y1="12" x2="15" y2="18"/>
   </symbol>
+  <symbol id="ico-dots" viewBox="0 0 24 24">
+    <circle cx="5"  cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+  </symbol>
 </defs>
 </svg>
 
@@ -136,6 +141,21 @@
         <button class="nav-btn" id="nextBtn" aria-label="Mes siguiente">
           <svg class="icon" width="18" height="18"><use href="#ico-right"/></svg>
         </button>
+        <div class="cal-opts-wrap" id="calOptsWrap">
+          <button class="nav-btn" id="calOptsBtn" aria-label="Opciones de borrado">
+            <svg class="icon" width="18" height="18"><use href="#ico-dots"/></svg>
+          </button>
+          <div class="cal-opts-menu" id="calOptsMenu" style="display:none">
+            <button class="cal-opts-item danger" id="delMonthBtn">
+              <svg class="icon" width="13" height="13"><use href="#ico-trash"/></svg>
+              Borrar mes
+            </button>
+            <button class="cal-opts-item danger" id="delAllBtn">
+              <svg class="icon" width="13" height="13"><use href="#ico-trash"/></svg>
+              Borrar todo
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="calendar">
@@ -224,6 +244,9 @@
               <svg class="icon" width="12" height="12"><use href="#ico-check"/></svg>
               Guardado
             </span>
+            <button class="del-day-btn" id="delDayBtn" aria-label="Borrar día">
+              <svg class="icon" width="14" height="14"><use href="#ico-trash"/></svg>
+            </button>
             <button class="close-btn" id="closeBtn" aria-label="Cerrar panel">
               <svg class="icon" width="15" height="15"><use href="#ico-x"/></svg>
             </button>
