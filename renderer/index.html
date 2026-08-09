@@ -479,6 +479,25 @@
   </div>
 </div>
 
+<!-- Confirm modal (reutilizable) -->
+<div class="sk-modal" id="confirmModal" style="display:none" role="dialog" aria-modal="true">
+  <div class="sk-modal-bd" id="confirmModalBd"></div>
+  <div class="confirm-card" id="confirmCard">
+    <div class="confirm-icon" id="confirmIcon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <h3 class="confirm-title" id="confirmTitle">Borrar</h3>
+    <p class="confirm-msg" id="confirmMsg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="confirmCancel">Cancelar</button>
+      <button class="confirm-ok danger" id="confirmOk">Borrar</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /page -->
 
 <!-- Auth overlay: solo visible en browser (PWA) cuando no hay sesion -->

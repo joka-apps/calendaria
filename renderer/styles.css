@@ -405,6 +405,52 @@ svg.icon {
 }
 .cal-opts-item.danger:hover { background: var(--red); color: #fff; }
 
+/* ── Confirm modal ───────────────────────────────────────────────────────── */
+.confirm-card {
+  position: relative; z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  width: min(360px, 90vw);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+  box-shadow: 0 20px 48px rgba(0,0,0,.28);
+  animation: modalIn .18s var(--ease) both;
+}
+.confirm-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  color: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.confirm-title {
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin: 0 0 8px; text-align: center;
+}
+.confirm-msg {
+  font-size: .84rem; color: var(--text2); line-height: 1.5;
+  margin: 0 0 22px; text-align: center;
+}
+.confirm-actions {
+  display: flex; gap: 10px; width: 100%;
+}
+.confirm-cancel, .confirm-ok {
+  flex: 1; padding: 10px 0; border: none; border-radius: 10px;
+  font-size: .88rem; font-weight: 600; cursor: pointer;
+  transition: background .15s, color .15s, transform .1s;
+}
+.confirm-cancel {
+  background: var(--surface2); color: var(--text);
+}
+.confirm-cancel:hover { background: var(--border); }
+.confirm-ok.danger {
+  background: var(--red); color: #fff;
+}
+.confirm-ok.danger:hover { filter: brightness(1.1); }
+.confirm-cancel:active, .confirm-ok:active { transform: scale(.97); }
+
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
 .tabs {
   display: flex;

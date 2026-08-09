@@ -795,27 +795,64 @@ function scheduleDrawSave() {
   }, 1000);
 }
 
+// ── Confirm modal ──────────────────────────────────────────────────────────
+(function () {
+  const modal   = document.getElementById('confirmModal');
+  const bd      = document.getElementById('confirmModalBd');
+  const titleEl = document.getElementById('confirmTitle');
+  const msgEl   = document.getElementById('confirmMsg');
+  const okBtn   = document.getElementById('confirmOk');
+  const cancelBtn = document.getElementById('confirmCancel');
+  let _resolve = null;
+
+  function closeConfirm(result) {
+    modal.style.display = 'none';
+    if (_resolve) { _resolve(result); _resolve = null; }
+  }
+
+  bd.addEventListener('click', () => closeConfirm(false));
+  cancelBtn.addEventListener('click', () => closeConfirm(false));
+  okBtn.addEventListener('click', () => closeConfirm(true));
+  document.addEventListener('keydown', e => {
+    if (modal.style.display !== 'none' && e.key === 'Escape') closeConfirm(false);
+  });
+
+  window.showConfirm = function (title, msg, okLabel = 'Borrar') {
+    titleEl.textContent = title;
+    msgEl.textContent   = msg;
+    okBtn.textContent   = okLabel;
+    modal.style.display = '';
+    cancelBtn.focus();
+    return new Promise(res => { _resolve = res; });
+  };
+})();
+
 // ── Delete helpers ─────────────────────────────────────────────────────────
 async function deleteDay() {
   if (!selDay) return;
   const label = `${selDay.d} de ${MONTHS[selDay.m]} ${selDay.y}`;
-  if (!confirm(`Borrar todo el contenido del ${label}?\n\nEsta accion no se puede deshacer.`)) return;
+  const ok = await window.showConfirm(
+    'Borrar este dia',
+    `Se eliminara todo el contenido del ${label}. Esta accion no se puede deshacer.`
+  );
+  if (!ok) return;
   const key = selDay.key;
   const dd  = allData[key] || {};
   for (const s of (dd.stickies || [])) {
-    if (s.type === 'drawing') {
-      const dk = s.drawingKey || key;
-      await window.api.saveDrawing(dk, null);
-    }
+    if (s.type === 'drawing') await window.api.saveDrawing(s.drawingKey || key, null);
   }
   delete allData[key];
   await window.api.saveDay(key, {});
   closePanel();
 }
 
-function deleteMonth() {
+async function deleteMonth() {
   const label = `${MONTHS[curM]} ${curY}`;
-  if (!confirm(`Borrar todos los datos de ${label}?\n\nEsta accion no se puede deshacer.`)) return;
+  const ok = await window.showConfirm(
+    'Borrar mes completo',
+    `Se eliminaran todos los datos de ${label}. Esta accion no se puede deshacer.`
+  );
+  if (!ok) return;
   const prefix = `${curY}-${String(curM + 1).padStart(2, '0')}-`;
   const keys   = Object.keys(allData).filter(k => k.startsWith(prefix));
   keys.forEach(k => { delete allData[k]; window.api.saveDay(k, {}); });
@@ -824,8 +861,12 @@ function deleteMonth() {
   renderHomeStats();
 }
 
-function deleteAll() {
-  if (!confirm('Borrar TODOS los datos de Calendaria?\n\nEsta accion no se puede deshacer.')) return;
+async function deleteAll() {
+  const ok = await window.showConfirm(
+    'Borrar todo',
+    'Se eliminaran todos los datos de fechas en Calendaria. Esta accion no se puede deshacer.'
+  );
+  if (!ok) return;
   const dateKeys = Object.keys(allData).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
   dateKeys.forEach(k => { delete allData[k]; window.api.saveDay(k, {}); });
   if (selDay) closePanel();
