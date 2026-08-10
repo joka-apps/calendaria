@@ -260,6 +260,18 @@
       });
       div.appendChild(delBtn);
 
+      const budgetBtn = document.createElement('button');
+      budgetBtn.className = 'pn-budget-btn';
+      budgetBtn.title = 'Presupuesto';
+      budgetBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 8.5a3 3 0 0 0-5 2.2c0 1.6 1 2.4 2.5 2.8s2.5 1.2 2.5 2.8a3 3 0 0 1-5 2.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="18" x2="12" y2="20"/></svg>';
+      budgetBtn.addEventListener('click', ev => { ev.stopPropagation(); openBudgetModal(n); });
+      div.appendChild(budgetBtn);
+
+      if (n.amount != null) {
+        const tag = makeBudgetTag(n);
+        div.appendChild(tag);
+      }
+
     } else {
       // Gateway: AND (Y) o OR (O)
       div.className = 'pn pn-gw pn-gw-' + n.type + (isSel ? ' pn-sel' : '');
@@ -284,8 +296,8 @@
     });
 
     div.addEventListener('mousedown', ev => {
-      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn')) return;
-      if (ev.target.classList.contains('pn-inp')) return; // no arrastrar mientras se edita
+      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn')) return;
+      if (ev.target.classList.contains('pn-inp')) return;
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
       const rect = $wrap.getBoundingClientRect();
@@ -359,6 +371,131 @@
   function fmtDate(d) {
     const dt = new Date(d + 'T00:00:00');
     return dt.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+  }
+
+  // ── Presupuesto de tarea ───────────────────────────────────────────────────
+  function fmtAmount(n) {
+    const sign = n.amountType === 'ingreso' ? '+' : '-';
+    return sign + ' S/. ' + Number(n.amount).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function makeBudgetTag(n) {
+    const tag = document.createElement('div');
+    tag.className = 'pn-budget-tag ' + (n.amountType || 'gasto');
+    tag.textContent = fmtAmount(n);
+    return tag;
+  }
+
+  function refreshBudgetNode(n) {
+    const nodeEl = $world?.querySelector('[data-node-id="' + n.id + '"]');
+    if (!nodeEl) return;
+    const existing = nodeEl.querySelector('.pn-budget-tag');
+    if (existing) existing.remove();
+    if (n.amount != null) nodeEl.appendChild(makeBudgetTag(n));
+  }
+
+  function openBudgetModal(n) {
+    document.querySelectorAll('.pln-bm-overlay').forEach(el => el.remove());
+
+    let selType = n.amountType || 'gasto';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'pln-bm-overlay';
+
+    const bd = document.createElement('div');
+    bd.className = 'pln-bm-bd';
+    bd.addEventListener('click', () => overlay.remove());
+
+    const card = document.createElement('div');
+    card.className = 'pln-bm-card';
+    card.addEventListener('click', ev => ev.stopPropagation());
+
+    // Encabezado
+    const hdr = document.createElement('div');
+    hdr.className = 'pln-bm-hdr';
+    const hdrLbl = document.createElement('span');
+    hdrLbl.className = 'pln-bm-lbl';
+    hdrLbl.textContent = 'Presupuesto de tarea';
+    const hdrTask = document.createElement('span');
+    hdrTask.className = 'pln-bm-task';
+    hdrTask.textContent = n.title || 'Tarea';
+    hdr.appendChild(hdrLbl);
+    hdr.appendChild(hdrTask);
+
+    // Toggle Gasto / Ingreso
+    const toggles = document.createElement('div');
+    toggles.className = 'pln-bm-toggles';
+    ['gasto', 'ingreso'].forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'pln-bm-type' + (selType === t ? ' active ' + t : '');
+      btn.dataset.t = t;
+      btn.textContent = t === 'gasto' ? 'Gasto' : 'Ingreso';
+      btn.addEventListener('click', () => {
+        selType = t;
+        toggles.querySelectorAll('.pln-bm-type').forEach(b => {
+          b.className = 'pln-bm-type' + (b.dataset.t === t ? ' active ' + t : '');
+        });
+      });
+      toggles.appendChild(btn);
+    });
+
+    // Monto
+    const amtWrap = document.createElement('div');
+    amtWrap.className = 'pln-bm-amt-wrap';
+    const cur = document.createElement('span');
+    cur.className = 'pln-bm-cur';
+    cur.textContent = 'S/.';
+    const amtInp = document.createElement('input');
+    amtInp.type = 'number';
+    amtInp.className = 'pln-bm-amt';
+    amtInp.min = '0'; amtInp.step = '0.01';
+    amtInp.placeholder = '0.00';
+    amtInp.value = n.amount != null ? n.amount : '';
+    amtInp.addEventListener('keydown', e => { if (e.key === 'Enter') saveBtn.click(); });
+    amtWrap.appendChild(cur);
+    amtWrap.appendChild(amtInp);
+
+    // Acciones
+    const actions = document.createElement('div');
+    actions.className = 'pln-bm-actions';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'pln-bm-clear';
+    clearBtn.textContent = 'Quitar';
+    clearBtn.addEventListener('click', () => {
+      n.amount = null; n.amountType = null;
+      persist(); refreshBudgetNode(n); overlay.remove();
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'pln-bm-cancel';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'pln-bm-save';
+    saveBtn.textContent = 'Guardar';
+    saveBtn.addEventListener('click', () => {
+      const val = parseFloat(amtInp.value);
+      if (!isNaN(val) && val >= 0) {
+        n.amount = val; n.amountType = selType;
+        persist(); refreshBudgetNode(n);
+      }
+      overlay.remove();
+    });
+
+    actions.appendChild(clearBtn);
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+
+    card.appendChild(hdr);
+    card.appendChild(toggles);
+    card.appendChild(amtWrap);
+    card.appendChild(actions);
+    overlay.appendChild(bd);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    setTimeout(() => amtInp.focus(), 30);
   }
 
   // ── Edicion de texto inline ────────────────────────────────────────────────

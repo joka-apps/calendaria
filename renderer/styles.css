@@ -1442,6 +1442,95 @@ canvas {
 .pn-task:hover .pn-del-btn { opacity: 1; }
 .pn-del-btn:hover { background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--red); }
 
+.pn-budget-btn {
+  position: absolute; bottom: 5px; right: 6px;
+  width: 18px; height: 18px; border-radius: 4px; border: none;
+  background: transparent; color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s, color .12s;
+}
+.pn-task:hover .pn-budget-btn { opacity: 1; }
+.pn-budget-btn:hover { color: var(--accent); }
+
+.pn-budget-tag {
+  position: absolute; bottom: 6px; left: 10px;
+  font-size: 10px; font-weight: 700; line-height: 1;
+  padding: 2px 5px; border-radius: 4px;
+  pointer-events: none;
+}
+.pn-budget-tag.gasto   { color: var(--red);   background: color-mix(in srgb, var(--red)   12%, transparent); }
+.pn-budget-tag.ingreso { color: var(--green);  background: color-mix(in srgb, var(--green) 12%, transparent); }
+
+/* ── Modal presupuesto de tarea ─────────────────────────────────────────── */
+.pln-bm-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+}
+.pln-bm-bd {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.35); backdrop-filter: blur(3px);
+}
+.pln-bm-card {
+  position: relative; z-index: 1;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 22px 18px;
+  width: min(340px, 92vw);
+  display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 20px 48px rgba(0,0,0,.28);
+  animation: modalIn .16s var(--ease) both;
+}
+.pln-bm-hdr { display: flex; flex-direction: column; gap: 3px; }
+.pln-bm-lbl { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+.pln-bm-task { font-size: .95rem; font-weight: 700; color: var(--text); }
+
+.pln-bm-toggles {
+  display: flex; border-radius: 10px; overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+.pln-bm-type {
+  flex: 1; padding: 9px 0; border: none;
+  background: transparent; color: var(--text2);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.pln-bm-type.active.gasto   { background: color-mix(in srgb, var(--red)   15%, var(--bg)); color: var(--red); }
+.pln-bm-type.active.ingreso { background: color-mix(in srgb, var(--green) 15%, var(--bg)); color: var(--green); }
+
+.pln-bm-amt-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border-radius: 10px;
+  padding: 10px 14px; border: 1.5px solid transparent;
+  transition: border-color .15s;
+}
+.pln-bm-amt-wrap:focus-within { border-color: var(--accent); }
+.pln-bm-cur { font-size: .9rem; font-weight: 700; color: var(--text2); }
+.pln-bm-amt {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 1.15rem; font-weight: 700; color: var(--text);
+  min-width: 0;
+}
+
+.pln-bm-actions { display: flex; gap: 8px; }
+.pln-bm-clear {
+  border: none; border-radius: 8px; padding: 9px 12px;
+  background: transparent; color: var(--text2); font-size: .83rem;
+  cursor: pointer; transition: color .12s;
+  margin-right: auto;
+}
+.pln-bm-clear:hover { color: var(--red); }
+.pln-bm-cancel {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 16px;
+  background: transparent; color: var(--text); font-size: .83rem;
+  cursor: pointer; transition: background .12s;
+}
+.pln-bm-cancel:hover { background: var(--surface2); }
+.pln-bm-save {
+  border: none; border-radius: 8px; padding: 9px 18px;
+  background: var(--accent); color: #fff; font-size: .83rem;
+  font-weight: 600; cursor: pointer; transition: filter .12s;
+}
+.pln-bm-save:hover { filter: brightness(1.1); }
+
 /* Date picker popup */
 .pln-dp {
   position: fixed; z-index: 9990;
