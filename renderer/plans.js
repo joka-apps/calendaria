@@ -4,7 +4,7 @@
 
 (function () {
   // ── Constantes ─────────────────────────────────────────────────────────────
-  const TW = 168, TH = 88;  // task node width/height
+  const TW = 168;            // task node width (fixed)
   const GS = 52;            // gateway bounding box
   const COLORS = ['#5B4AE8','#E84A6F','#10B981','#F59E0B','#3B82F6','#8B5CF6','#EC4899'];
 
@@ -21,8 +21,17 @@
   let $view, $wrap, $world, $svg, $plansList, $planHeader, $empty;
 
   // ── Geometria ──────────────────────────────────────────────────────────────
+  // Altura dinamica segun contenido del nodo
+  function nodeH(n) {
+    if (n.type !== 'task') return GS;
+    const len    = (n.title || '').length;
+    const rows   = len > 18 ? 2 : 1;          // heuristica: >18 chars → 2 lineas
+    const extras = (n.date ? 1 : 0) + ((n.startDate || n.endDate) ? 1 : 0);
+    return Math.max(52, 16 + rows * 20 + extras * 16);
+  }
+
   const nw = n => n.type === 'task' ? TW : GS;
-  const nh = n => n.type === 'task' ? TH : GS;
+  const nh = n => n.type === 'task' ? nodeH(n) : GS;
   const cx = n => n.x + nw(n) / 2;
   const cy = n => n.y + nh(n) / 2;
 
@@ -150,7 +159,7 @@
   // ── Nodos ──────────────────────────────────────────────────────────────────
   function addNode(type, x, y) {
     if (!active) return;
-    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startTime: null, endTime: null, x: Math.round(x), y: Math.round(y) };
+    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startDate: null, endDate: null, x: Math.round(x), y: Math.round(y) };
     active.nodes.push(n);
     sel = { type: 'node', id: n.id };
     persist();
@@ -222,7 +231,7 @@
     if (n.type === 'task') {
       div.className = 'pn pn-task' + (isSel ? ' pn-sel' : '');
       div.style.width  = TW + 'px';
-      div.style.height = TH + 'px';
+      div.style.height = nodeH(n) + 'px';
 
       const title = document.createElement('div');
       title.className = 'pn-title';
@@ -240,10 +249,10 @@
         div.appendChild(dlbl);
       }
 
-      if (n.startTime || n.endTime) {
+      if (n.startDate || n.endDate) {
         const tlbl = document.createElement('div');
         tlbl.className = 'pn-time-lbl';
-        tlbl.textContent = fmtTimeRange(n);
+        tlbl.textContent = fmtDateRange(n);
         div.appendChild(tlbl);
       }
 
@@ -255,10 +264,10 @@
       div.appendChild(calBtn);
 
       const timeBtn = document.createElement('button');
-      timeBtn.className = 'pn-time-btn';
-      timeBtn.title = 'Horario';
-      timeBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>';
-      timeBtn.addEventListener('click', ev => { ev.stopPropagation(); openTimePicker(n, timeBtn); });
+      timeBtn.className = 'pn-range-btn';
+      timeBtn.title = 'Fechas de inicio y fin';
+      timeBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="8 7 3 12 8 17"/><polyline points="16 7 21 12 16 17"/></svg>';
+      timeBtn.addEventListener('click', ev => { ev.stopPropagation(); openDateRangePicker(n, timeBtn); });
       div.appendChild(timeBtn);
 
       const delBtn = document.createElement('button');
@@ -310,7 +319,7 @@
     });
 
     div.addEventListener('mousedown', ev => {
-      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn') || ev.target.closest('.pn-time-btn')) return;
+      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn') || ev.target.closest('.pn-range-btn')) return;
       if (ev.target.classList.contains('pn-inp')) return;
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
@@ -387,14 +396,14 @@
     return dt.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
   }
 
-  function fmtTimeRange(n) {
-    if (n.startTime && n.endTime) return n.startTime + ' - ' + n.endTime;
-    if (n.startTime) return 'Desde ' + n.startTime;
-    if (n.endTime)   return 'Hasta ' + n.endTime;
+  function fmtDateRange(n) {
+    if (n.startDate && n.endDate) return fmtDate(n.startDate) + ' - ' + fmtDate(n.endDate);
+    if (n.startDate) return 'Desde ' + fmtDate(n.startDate);
+    if (n.endDate)   return 'Hasta ' + fmtDate(n.endDate);
     return '';
   }
 
-  function openTimePicker(n, btn) {
+  function openDateRangePicker(n, btn) {
     document.querySelectorAll('.pln-tp').forEach(el => el.remove());
     const dp = document.createElement('div');
     dp.className = 'pln-tp';
@@ -409,7 +418,7 @@
       lbl.className = 'pln-tp-lbl';
       lbl.textContent = label;
       const inp = document.createElement('input');
-      inp.type = 'time';
+      inp.type = 'date';
       inp.className = 'pln-tp-inp';
       inp.value = val || '';
       wrap.appendChild(lbl);
@@ -417,8 +426,8 @@
       return { wrap, inp };
     }
 
-    const { wrap: startWrap, inp: startInp } = makeField('Inicio', n.startTime);
-    const { wrap: endWrap,   inp: endInp   } = makeField('Fin',    n.endTime);
+    const { wrap: startWrap, inp: startInp } = makeField('Inicio', n.startDate);
+    const { wrap: endWrap,   inp: endInp   } = makeField('Fin',    n.endDate);
     row.appendChild(startWrap);
     row.appendChild(endWrap);
 
@@ -427,9 +436,9 @@
 
     const clrBtn = document.createElement('button');
     clrBtn.className = 'pln-dp-clr';
-    clrBtn.textContent = 'Sin horario';
+    clrBtn.textContent = 'Sin fechas';
     clrBtn.addEventListener('click', () => {
-      n.startTime = null; n.endTime = null;
+      n.startDate = null; n.endDate = null;
       persist(); redraw(); dp.remove();
     });
 
@@ -437,8 +446,8 @@
     okBtn.className = 'pln-tp-ok';
     okBtn.textContent = 'Aplicar';
     okBtn.addEventListener('click', () => {
-      n.startTime = startInp.value || null;
-      n.endTime   = endInp.value   || null;
+      n.startDate = startInp.value || null;
+      n.endDate   = endInp.value   || null;
       persist(); redraw(); dp.remove();
     });
 
@@ -449,7 +458,7 @@
     document.body.appendChild(dp);
 
     const r = btn.getBoundingClientRect();
-    dp.style.left = Math.max(8, r.right - 220) + 'px';
+    dp.style.left = Math.max(8, r.right - 240) + 'px';
     dp.style.top  = (r.bottom + 6) + 'px';
 
     setTimeout(() => {
@@ -649,7 +658,7 @@
       const wx = (ev.clientX - rect.left - pz.x) / pz.z;
       const wy = (ev.clientY - rect.top  - pz.y) / pz.z;
       const hw = addMode === 'task' ? TW / 2 : GS / 2;
-      const hh = addMode === 'task' ? TH / 2 : GS / 2;
+      const hh = addMode === 'task' ? 26 : GS / 2;  // 26 = mitad de altura minima de nodo
       addNode(addMode, wx - hw, wy - hh);
       setMode(null);
     });
