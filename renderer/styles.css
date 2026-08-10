@@ -1364,7 +1364,7 @@ canvas {
   background: var(--surface);
   box-shadow: 0 2px 8px rgba(0,0,0,.08);
   display: flex; flex-direction: column;
-  justify-content: center; padding: 0 12px 0 10px;
+  justify-content: center; padding: 8px 12px 8px 10px;
   gap: 2px;
   transition: box-shadow .15s;
 }
@@ -1372,22 +1372,40 @@ canvas {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 35%, transparent);
 }
 .pn-title {
-  font-size: 13px; font-weight: 600; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 130px;
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.35;
 }
 .pn-date-lbl {
-  font-size: 11px; color: var(--pc); font-weight: 500;
+  font-size: 10.5px; color: var(--pc); font-weight: 500;
+}
+.pn-time-lbl {
+  font-size: 10.5px; color: var(--text2); font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .pn-cal-btn {
-  position: absolute; top: 5px; right: 6px;
+  position: absolute; top: 5px; right: 26px;
   width: 18px; height: 18px; border-radius: 4px; border: none;
-  background: transparent; color: var(--text3); cursor: pointer;
+  background: transparent; color: var(--text2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity .15s, color .15s;
 }
 .pn-task:hover .pn-cal-btn { opacity: 1; }
 .pn-cal-btn:hover { color: var(--pc); }
+
+.pn-time-btn {
+  position: absolute; top: 5px; right: 6px;
+  width: 18px; height: 18px; border-radius: 4px; border: none;
+  background: transparent; color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s, color .15s;
+}
+.pn-task:hover .pn-time-btn { opacity: 1; }
+.pn-time-btn:hover { color: var(--pc); }
 
 /* Gateway node */
 .pn-gw {
@@ -1425,10 +1443,10 @@ canvas {
 
 /* Inline edit input */
 .pn-inp {
-  font-size: 13px; font-weight: 600; color: var(--text);
+  font-size: 12.5px; font-weight: 600; color: var(--text);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border: none; outline: none; border-radius: 4px;
-  width: 128px; padding: 1px 4px; margin: -1px -4px;
+  width: 138px; padding: 1px 4px; margin: -1px -4px;
   caret-color: var(--accent);
 }
 
@@ -1548,10 +1566,51 @@ canvas {
 }
 .pln-dp-inp:focus { border-color: var(--accent); outline: none; }
 .pln-dp-clr {
-  font-size: 12px; color: var(--text3); background: none;
+  font-size: 12px; color: var(--text2); background: none;
   border: none; cursor: pointer; text-align: left; padding: 0;
 }
 .pln-dp-clr:hover { color: var(--red); }
+
+/* Time picker popup */
+.pln-tp {
+  position: fixed; z-index: 9990;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  min-width: 220px;
+}
+.pln-tp-row {
+  display: flex; gap: 10px;
+}
+.pln-tp-field {
+  flex: 1; display: flex; flex-direction: column; gap: 4px;
+}
+.pln-tp-lbl {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text2);
+}
+.pln-tp-inp {
+  font-size: 13px; color: var(--text);
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 6px 8px;
+  outline: none; transition: border-color .15s;
+  color-scheme: light dark; width: 100%;
+}
+.pln-tp-inp:focus { border-color: var(--accent); }
+.pln-tp-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 2px;
+}
+.pln-tp-ok {
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 7px; padding: 6px 14px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: filter .12s;
+}
+.pln-tp-ok:hover { filter: brightness(1.1); }
 
 /* Plan dots in calendar cells */
 .plan-dots-row {

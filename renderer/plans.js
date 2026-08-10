@@ -4,7 +4,7 @@
 
 (function () {
   // ── Constantes ─────────────────────────────────────────────────────────────
-  const TW = 168, TH = 60;  // task node width/height
+  const TW = 168, TH = 88;  // task node width/height
   const GS = 52;            // gateway bounding box
   const COLORS = ['#5B4AE8','#E84A6F','#10B981','#F59E0B','#3B82F6','#8B5CF6','#EC4899'];
 
@@ -150,7 +150,7 @@
   // ── Nodos ──────────────────────────────────────────────────────────────────
   function addNode(type, x, y) {
     if (!active) return;
-    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, x: Math.round(x), y: Math.round(y) };
+    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startTime: null, endTime: null, x: Math.round(x), y: Math.round(y) };
     active.nodes.push(n);
     sel = { type: 'node', id: n.id };
     persist();
@@ -240,12 +240,26 @@
         div.appendChild(dlbl);
       }
 
+      if (n.startTime || n.endTime) {
+        const tlbl = document.createElement('div');
+        tlbl.className = 'pn-time-lbl';
+        tlbl.textContent = fmtTimeRange(n);
+        div.appendChild(tlbl);
+      }
+
       const calBtn = document.createElement('button');
       calBtn.className = 'pn-cal-btn';
       calBtn.title = 'Asignar fecha';
       calBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
       calBtn.addEventListener('click', ev => { ev.stopPropagation(); openDatePicker(n, calBtn); });
       div.appendChild(calBtn);
+
+      const timeBtn = document.createElement('button');
+      timeBtn.className = 'pn-time-btn';
+      timeBtn.title = 'Horario';
+      timeBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>';
+      timeBtn.addEventListener('click', ev => { ev.stopPropagation(); openTimePicker(n, timeBtn); });
+      div.appendChild(timeBtn);
 
       const delBtn = document.createElement('button');
       delBtn.className = 'pn-del-btn';
@@ -296,7 +310,7 @@
     });
 
     div.addEventListener('mousedown', ev => {
-      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn')) return;
+      if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn') || ev.target.closest('.pn-time-btn')) return;
       if (ev.target.classList.contains('pn-inp')) return;
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
@@ -371,6 +385,81 @@
   function fmtDate(d) {
     const dt = new Date(d + 'T00:00:00');
     return dt.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+  }
+
+  function fmtTimeRange(n) {
+    if (n.startTime && n.endTime) return n.startTime + ' - ' + n.endTime;
+    if (n.startTime) return 'Desde ' + n.startTime;
+    if (n.endTime)   return 'Hasta ' + n.endTime;
+    return '';
+  }
+
+  function openTimePicker(n, btn) {
+    document.querySelectorAll('.pln-tp').forEach(el => el.remove());
+    const dp = document.createElement('div');
+    dp.className = 'pln-tp';
+
+    const row = document.createElement('div');
+    row.className = 'pln-tp-row';
+
+    function makeField(label, val) {
+      const wrap = document.createElement('div');
+      wrap.className = 'pln-tp-field';
+      const lbl = document.createElement('span');
+      lbl.className = 'pln-tp-lbl';
+      lbl.textContent = label;
+      const inp = document.createElement('input');
+      inp.type = 'time';
+      inp.className = 'pln-tp-inp';
+      inp.value = val || '';
+      wrap.appendChild(lbl);
+      wrap.appendChild(inp);
+      return { wrap, inp };
+    }
+
+    const { wrap: startWrap, inp: startInp } = makeField('Inicio', n.startTime);
+    const { wrap: endWrap,   inp: endInp   } = makeField('Fin',    n.endTime);
+    row.appendChild(startWrap);
+    row.appendChild(endWrap);
+
+    const actions = document.createElement('div');
+    actions.className = 'pln-tp-actions';
+
+    const clrBtn = document.createElement('button');
+    clrBtn.className = 'pln-dp-clr';
+    clrBtn.textContent = 'Sin horario';
+    clrBtn.addEventListener('click', () => {
+      n.startTime = null; n.endTime = null;
+      persist(); redraw(); dp.remove();
+    });
+
+    const okBtn = document.createElement('button');
+    okBtn.className = 'pln-tp-ok';
+    okBtn.textContent = 'Aplicar';
+    okBtn.addEventListener('click', () => {
+      n.startTime = startInp.value || null;
+      n.endTime   = endInp.value   || null;
+      persist(); redraw(); dp.remove();
+    });
+
+    actions.appendChild(clrBtn);
+    actions.appendChild(okBtn);
+    dp.appendChild(row);
+    dp.appendChild(actions);
+    document.body.appendChild(dp);
+
+    const r = btn.getBoundingClientRect();
+    dp.style.left = Math.max(8, r.right - 220) + 'px';
+    dp.style.top  = (r.bottom + 6) + 'px';
+
+    setTimeout(() => {
+      const close = e => {
+        if (!dp.contains(e.target) && e.target !== btn) {
+          dp.remove(); window.removeEventListener('mousedown', close);
+        }
+      };
+      window.addEventListener('mousedown', close);
+    }, 10);
   }
 
   // ── Presupuesto de tarea ───────────────────────────────────────────────────
