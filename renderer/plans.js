@@ -25,9 +25,10 @@
   function nodeH(n) {
     if (n.type !== 'task') return GS;
     const len    = (n.title || '').length;
-    const rows   = len > 18 ? 2 : 1;          // heuristica: >18 chars → 2 lineas
-    const extras = (n.date ? 1 : 0) + ((n.startDate || n.endDate) ? 1 : 0);
-    return Math.max(52, 16 + rows * 20 + extras * 16);
+    const rows   = len > 18 ? 2 : 1;
+    const extras = (n.date ? 1 : 0) + ((n.startDate || n.endDate) ? 1 : 0) + (n.amount != null ? 1 : 0);
+    // 24px zona superior (botones) + contenido + 8px inferior
+    return Math.max(52, 24 + rows * 18 + extras * 17 + 8);
   }
 
   const nw = n => n.type === 'task' ? TW : GS;
@@ -562,7 +563,7 @@
     clearBtn.textContent = 'Quitar';
     clearBtn.addEventListener('click', () => {
       n.amount = null; n.amountType = null;
-      persist(); refreshBudgetNode(n); overlay.remove();
+      persist(); overlay.remove(); redraw();
     });
 
     const cancelBtn = document.createElement('button');
@@ -577,9 +578,9 @@
       const val = parseFloat(amtInp.value);
       if (!isNaN(val) && val >= 0) {
         n.amount = val; n.amountType = selType;
-        persist(); refreshBudgetNode(n);
+        persist();
       }
-      overlay.remove();
+      overlay.remove(); redraw();
     });
 
     actions.appendChild(clearBtn);
