@@ -1131,9 +1131,11 @@ document.getElementById('txDesc').addEventListener('keydown', e => { if (e.key =
 
 // Finance view toggle
 function openFinanceView() {
-  // Close plans if open
+  // Close plans / presupuesto if open
   if (document.getElementById('plansView')?.classList.contains('active'))
     window.Plans?.closeView();
+  if (document.getElementById('presupuestoView')?.classList.contains('active'))
+    window.Presupuesto?.closeView();
 
   layout.style.display = 'none';
   document.getElementById('financeView').classList.add('active');
@@ -1446,13 +1448,17 @@ function showAuthOverlay() {
   window.Plans?.init();
   window.Plans?.load(allData['__plans__'] ?? null);
 
+  window.Presupuesto?.init();
+  window.Presupuesto?.load(allData['__presupuesto__'] ?? null);
+
   document.getElementById('planesBtn')?.addEventListener('click', () => {
     const plansActive = document.getElementById('plansView')?.classList.contains('active');
     if (plansActive) {
       window.Plans?.closeView();
     } else {
-      // Close finance if open
       if (document.getElementById('financeView').classList.contains('active')) closeFinanceView();
+      if (document.getElementById('presupuestoView')?.classList.contains('active'))
+        window.Presupuesto?.closeView();
       window.Plans?.openView();
     }
   });
@@ -1461,6 +1467,18 @@ function showAuthOverlay() {
     const fv = document.getElementById('financeView');
     if (fv.classList.contains('active')) closeFinanceView();
     else openFinanceView();
+  });
+
+  document.getElementById('presupuestoBtn')?.addEventListener('click', () => {
+    const pv = document.getElementById('presupuestoView');
+    if (pv?.classList.contains('active')) {
+      window.Presupuesto?.closeView();
+    } else {
+      if (document.getElementById('financeView').classList.contains('active')) closeFinanceView();
+      if (document.getElementById('plansView')?.classList.contains('active'))
+        window.Plans?.closeView();
+      window.Presupuesto?.openView();
+    }
   });
 
   const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

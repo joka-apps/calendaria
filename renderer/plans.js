@@ -834,6 +834,7 @@
     },
     load,
     getPlanDates,
+    getPlans() { return plans; },
     openView,
     closeView,
   };

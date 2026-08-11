@@ -93,6 +93,12 @@
     <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
     <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
   </symbol>
+  <symbol id="ico-budget" viewBox="0 0 24 24">
+    <line x1="3" y1="20" x2="21" y2="20"/>
+    <rect x="4"  y="13" width="4" height="7" rx="1"/>
+    <rect x="10" y="8"  width="4" height="12" rx="1"/>
+    <rect x="16" y="3"  width="4" height="17" rx="1"/>
+  </symbol>
 </defs>
 </svg>
 
@@ -110,6 +116,10 @@
       <button class="pill-btn" id="finanzasBtn">
         <svg class="icon" width="14" height="14"><use href="#ico-finance"/></svg>
         Finanzas
+      </button>
+      <button class="pill-btn" id="presupuestoBtn">
+        <svg class="icon" width="14" height="14"><use href="#ico-budget"/></svg>
+        Presupuesto
       </button>
       <button class="pill-btn" id="todayBtn">
         <svg class="icon" width="14" height="14"><use href="#ico-today"/></svg>
@@ -412,6 +422,64 @@
 
   </div><!-- /finance-view -->
 
+  <!-- Presupuesto view: estimados + suscripciones -->
+  <div class="presupuesto-view" id="presupuestoView">
+
+    <!-- Izquierda: resumen + suscripciones -->
+    <aside class="pv-sidebar">
+
+      <div class="pv-summary-card">
+        <span class="pv-summary-lbl">Estimado mensual</span>
+        <div class="pv-net-amt" id="pvSummaryNet">+ S/. 0.00</div>
+        <div class="pv-summary-sub">
+          <span class="pv-sum-in">
+            <svg class="icon" width="11" height="11"><use href="#ico-up"/></svg>
+            <span id="pvSummaryIn">S/. 0.00</span>
+          </span>
+          <span class="pv-sum-out">
+            <svg class="icon" width="11" height="11"><use href="#ico-down"/></svg>
+            <span id="pvSummaryOut">S/. 0.00</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="pv-section">
+        <div class="pv-section-hdr">
+          <span class="pv-section-title">Suscripciones</span>
+        </div>
+
+        <div class="pv-sub-form">
+          <input type="text" id="pvSubName" class="pv-sub-name-inp"
+            placeholder="Nombre del servicio...">
+          <div class="pv-sub-form-row">
+            <div class="pv-amt-wrap">
+              <span class="pv-cur">S/.</span>
+              <input type="number" id="pvSubAmt" class="pv-amt-inp"
+                placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="pv-period-toggle">
+              <button class="pv-period-btn active" data-p="monthly">Mensual</button>
+              <button class="pv-period-btn" data-p="annual">Anual</button>
+            </div>
+            <button class="pv-sub-add" id="pvSubAddBtn" title="Agregar suscripcion">
+              <svg class="icon" width="13" height="13"><use href="#ico-plus"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="pv-subs-list" id="pvSubsList"></div>
+      </div>
+
+    </aside>
+
+    <!-- Derecha: tareas de planes con monto -->
+    <div class="pv-plans-area">
+      <div class="pv-plans-hdr">De Planes</div>
+      <div class="pv-plans-list" id="pvPlansList"></div>
+    </div>
+
+  </div><!-- /presupuesto-view -->
+
 <!-- Sticky expand modal (notes and lists) -->
 <div class="sk-modal" id="stickyModal" style="display:none">
   <div class="sk-modal-bd" id="stickyModalBd"></div>
@@ -519,6 +587,7 @@
 <script src="config.js"></script>
 <script src="supabase-layer.js"></script>
 <script src="plans.js"></script>
+<script src="presupuesto.js"></script>
 <script src="app.js"></script>
 <script>
   // Registro del service worker (solo en browser, no en Electron)
