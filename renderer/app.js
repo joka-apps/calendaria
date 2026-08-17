@@ -632,6 +632,7 @@ async function openDay(y, m, d) {
   renderCal();
   renderStickies();
   renderDayFinStrip();
+  renderDayPlanItems();
 }
 
 // ── Close panel ────────────────────────────────────────────────────────────
@@ -959,6 +960,69 @@ function updateBalanceDisplay() {
   totalEl.textContent = fmt(g.net);
   inEl.textContent    = fmt(g.totalIn);
   outEl.textContent   = fmt(g.totalOut);
+}
+
+// ── Tareas de planes para el dia seleccionado ─────────────────────────────
+function renderDayPlanItems() {
+  const section = document.getElementById('dayPlanSection');
+  const list    = document.getElementById('dayPlanList');
+  if (!section || !list || !selDay) { if (section) section.style.display = 'none'; return; }
+
+  const dateStr = selDay.y + '-' + String(selDay.m + 1).padStart(2, '0') + '-' + String(selDay.d).padStart(2, '0');
+  const groups  = window.Plans?.getItemsForDate?.(dateStr) || [];
+
+  if (!groups.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  list.innerHTML = '';
+
+  for (const { plan, node } of groups) {
+    const group = document.createElement('div');
+    group.className = 'dps-group';
+    group.style.setProperty('--pc', plan.color);
+
+    const hdr = document.createElement('div');
+    hdr.className = 'dps-group-hdr';
+
+    const dot = document.createElement('span');
+    dot.className = 'dps-dot';
+
+    const planName = document.createElement('span');
+    planName.className = 'dps-plan-name';
+    planName.textContent = plan.title;
+
+    const sep = document.createElement('span');
+    sep.className = 'dps-sep';
+    sep.textContent = '·';
+
+    const nodeName = document.createElement('span');
+    nodeName.className = 'dps-node-name';
+    nodeName.textContent = node.title;
+
+    hdr.append(dot, planName, sep, nodeName);
+    group.appendChild(hdr);
+
+    for (const item of (node.items || [])) {
+      const row = document.createElement('div');
+      row.className = 'dps-item' + (item.done ? ' done' : '');
+
+      const cb = document.createElement('div');
+      cb.className = 'dps-cb' + (item.done ? ' done' : '');
+      if (item.done) cb.innerHTML = '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      cb.addEventListener('click', () => {
+        window.Plans?.toggleItem(node.id, item.id);
+        renderDayPlanItems();
+      });
+
+      const txt = document.createElement('span');
+      txt.className = 'dps-txt';
+      txt.textContent = item.text;
+
+      row.append(cb, txt);
+      group.appendChild(row);
+    }
+
+    list.appendChild(group);
+  }
 }
 
 function renderDayFinStrip() {
@@ -1429,7 +1493,7 @@ function showAuthOverlay() {
     const { key, data } = e.detail;
     allData[key] = data;
     if (key === '__pending__') { pending = Array.isArray(data) ? data : []; renderPending(); }
-    if (key === '__plans__')   { window.Plans?.load(data); }
+    if (key === '__plans__')   { window.Plans?.load(data); renderDayPlanItems(); }
     renderCal();
     renderHomeStats();
     if (selDay && selDay.key === key) {
@@ -1439,7 +1503,8 @@ function showAuthOverlay() {
     }
   });
 
-  window.addEventListener('plans-changed', () => renderCal());
+  window.addEventListener('plans-changed',       () => renderCal());
+  window.addEventListener('plans-items-changed', () => renderDayPlanItems());
 
   const [data, prefs] = await Promise.all([window.api.getData(), window.api.getPrefs()]);
   allData = data || {};

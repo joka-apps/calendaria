@@ -16,19 +16,24 @@
   let drag   = null;         // { kind:'node'|'pan', ... }
   let conn   = null;         // { fromId, tempLine }
   let pz     = { x:60, y:60, z:1 };
+  const expanded = new Set(); // ids de nodos con panel de subtareas abierto
 
   // ── DOM ────────────────────────────────────────────────────────────────────
   let $view, $wrap, $world, $svg, $plansList, $planHeader, $empty;
 
   // ── Geometria ──────────────────────────────────────────────────────────────
   // Altura dinamica segun contenido del nodo
+  const EXPAND_H = 24; // altura de la barra de expansion en la base del nodo
+
   function nodeH(n) {
     if (n.type !== 'task') return GS;
     const len    = (n.title || '').length;
     const rows   = len > 18 ? 2 : 1;
     const extras = (n.date ? 1 : 0) + ((n.startDate || n.endDate) ? 1 : 0) + (n.amount != null ? 1 : 0);
-    // 24px zona superior (botones) + contenido + 8px inferior
-    return Math.max(52, 24 + rows * 18 + extras * 17 + 8);
+    const base   = Math.max(52, 24 + rows * 18 + extras * 17 + 8) + EXPAND_H;
+    if (!expanded.has(n.id)) return base;
+    const cnt    = (n.items || []).length;
+    return base + 8 + cnt * 30 + 36 + 8; // sep + filas + add-row + padding
   }
 
   const nw = n => n.type === 'task' ? TW : GS;
@@ -168,7 +173,7 @@
   // ── Nodos ──────────────────────────────────────────────────────────────────
   function addNode(type, x, y) {
     if (!active) return;
-    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startDate: null, endDate: null, x: Math.round(x), y: Math.round(y) };
+    const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startDate: null, endDate: null, items: [], x: Math.round(x), y: Math.round(y) };
     active.nodes.push(n);
     sel = { type: 'node', id: n.id };
     persist();
@@ -304,6 +309,33 @@
         div.appendChild(tag);
       }
 
+      // Spacer que empuja la barra de expansion al fondo
+      const spacer = document.createElement('div');
+      spacer.style.cssText = 'flex:1; min-height:4px;';
+      div.appendChild(spacer);
+
+      // Panel de subtareas (visible cuando el nodo está expandido)
+      if (expanded.has(n.id)) {
+        div.appendChild(buildItemsPanel(n));
+      }
+
+      // Barra de expansion (siempre visible al fondo del nodo)
+      const isOpen = expanded.has(n.id);
+      const cnt    = (n.items || []).length;
+      const expandBar = document.createElement('div');
+      expandBar.className = 'pn-expand-bar' + (isOpen ? ' open' : '');
+      expandBar.innerHTML = isOpen
+        ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg><span>Ocultar tareas</span>'
+        : '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span>' + (cnt ? 'Tareas (' + cnt + ')' : 'Agregar tareas') + '</span>';
+      expandBar.addEventListener('mousedown', ev => ev.stopPropagation());
+      expandBar.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (expanded.has(n.id)) expanded.delete(n.id);
+        else expanded.add(n.id);
+        redraw();
+      });
+      div.appendChild(expandBar);
+
     } else {
       // Gateway: AND (Y) o OR (O)
       div.className = 'pn pn-gw pn-gw-' + n.type + (isSel ? ' pn-sel' : '');
@@ -329,7 +361,7 @@
 
     div.addEventListener('mousedown', ev => {
       if (ev.target.classList.contains('pn-h') || ev.target.closest('.pn-cal-btn') || ev.target.closest('.pn-del-btn') || ev.target.closest('.pn-budget-btn') || ev.target.closest('.pn-range-btn')) return;
-      if (ev.target.classList.contains('pn-inp')) return;
+      if (ev.target.classList.contains('pn-inp') || ev.target.closest('.pn-items-panel') || ev.target.closest('.pn-expand-bar')) return;
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
       const rect = $wrap.getBoundingClientRect();
@@ -605,6 +637,115 @@
     setTimeout(() => amtInp.focus(), 30);
   }
 
+  // ── Panel de subtareas ────────────────────────────────────────────────────
+  function buildItemsPanel(n) {
+    if (!n.items) n.items = [];
+    const panel = document.createElement('div');
+    panel.className = 'pn-items-panel';
+    panel.addEventListener('mousedown', ev => ev.stopPropagation());
+    panel.addEventListener('click',     ev => ev.stopPropagation());
+
+    for (const item of n.items) {
+      panel.appendChild(buildItemRow(n, item));
+    }
+
+    // Fila para agregar nueva subtarea
+    const addRow = document.createElement('div');
+    addRow.className = 'pn-add-row';
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'pn-add-inp';
+    inp.placeholder = 'Nueva tarea...';
+    inp.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter') addSubItem(n, inp);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'pn-add-item-btn';
+    addBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    addBtn.addEventListener('click', () => addSubItem(n, inp));
+
+    addRow.append(inp, addBtn);
+    panel.appendChild(addRow);
+    return panel;
+  }
+
+  function buildItemRow(n, item) {
+    const row = document.createElement('div');
+    row.className = 'pn-item';
+
+    const cb = document.createElement('div');
+    cb.className = 'pn-item-cb' + (item.done ? ' done' : '');
+    if (item.done) cb.innerHTML = '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    cb.addEventListener('click', ev => {
+      ev.stopPropagation();
+      item.done = !item.done;
+      persist(); notifyCal();
+      cb.className = 'pn-item-cb' + (item.done ? ' done' : '');
+      cb.innerHTML = item.done ? '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      txt.className = 'pn-item-txt' + (item.done ? ' done' : '');
+      // Notificar al panel del dia si está abierto
+      window.dispatchEvent(new CustomEvent('plans-items-changed'));
+    });
+
+    const txt = document.createElement('span');
+    txt.className = 'pn-item-txt' + (item.done ? ' done' : '');
+    txt.textContent = item.text;
+    txt.addEventListener('click', ev => {
+      ev.stopPropagation();
+      // Edicion inline del texto de la subtarea
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'pn-add-inp';
+      inp.style.cssText = 'flex:1; height:20px; padding:2px 6px; font-size:11.5px;';
+      inp.value = item.text;
+      txt.replaceWith(inp);
+      inp.focus(); inp.select();
+      const commit = () => {
+        const v = inp.value.trim();
+        if (v) { item.text = v; persist(); }
+        inp.replaceWith(txt);
+        txt.textContent = item.text;
+      };
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', e => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        if (e.key === 'Escape') { inp.value = item.text; inp.blur(); }
+      });
+    });
+
+    const del = document.createElement('button');
+    del.className = 'pn-item-del';
+    del.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    del.addEventListener('click', ev => {
+      ev.stopPropagation();
+      n.items = n.items.filter(i => i.id !== item.id);
+      persist(); redraw(); notifyCal();
+      window.dispatchEvent(new CustomEvent('plans-items-changed'));
+    });
+
+    row.append(cb, txt, del);
+    return row;
+  }
+
+  function addSubItem(n, inp) {
+    const text = inp.value.trim();
+    if (!text) { inp.focus(); return; }
+    if (!n.items) n.items = [];
+    n.items.push({ id: uid(), text, done: false });
+    persist(); redraw(); notifyCal();
+    window.dispatchEvent(new CustomEvent('plans-items-changed'));
+    // Devolver el foco al input tras el redraw
+    setTimeout(() => {
+      const panel = $world?.querySelector('[data-node-id="' + n.id + '"] .pn-items-panel');
+      const ni = panel?.querySelector('.pn-add-inp');
+      if (ni) ni.focus();
+    }, 20);
+  }
+
   // ── Edicion de texto inline ────────────────────────────────────────────────
   function startEditTitle(id) {
     const n  = active?.nodes.find(n => n.id === id);
@@ -843,6 +984,34 @@
     load,
     getPlanDates,
     getPlans() { return plans; },
+    getItemsForDate(dateStr) {
+      const out = [];
+      for (const p of plans) {
+        for (const n of p.nodes) {
+          if (n.type !== 'task' || !(n.items?.length)) continue;
+          const inRange =
+            n.date === dateStr ||
+            (n.startDate && n.endDate   && dateStr >= n.startDate && dateStr <= n.endDate) ||
+            (n.startDate && !n.endDate  && dateStr === n.startDate) ||
+            (!n.startDate && n.endDate  && dateStr === n.endDate);
+          if (inRange) out.push({ plan: p, node: n });
+        }
+      }
+      return out;
+    },
+    toggleItem(nodeId, itemId) {
+      for (const p of plans) {
+        const node = p.nodes.find(n => n.id === nodeId);
+        if (!node) continue;
+        const item = (node.items || []).find(i => i.id === itemId);
+        if (!item) continue;
+        item.done = !item.done;
+        persist(); notifyCal();
+        if ($view?.classList.contains('active')) redraw();
+        return true;
+      }
+      return false;
+    },
     openView,
     closeView,
   };
