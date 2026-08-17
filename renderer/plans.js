@@ -69,14 +69,22 @@
 
   // ── Datos ──────────────────────────────────────────────────────────────────
   function load(raw) {
+    const prevId = active?.id;
     plans = Array.isArray(raw?.plans) ? raw.plans : [];
     plans.forEach(p => {
       if (!p.nodes) p.nodes = [];
       if (!p.edges) p.edges = [];
     });
     renderSidebar();
-    if (plans.length > 0) openPlan(plans[0].id);
-    else { active = null; redraw(); }
+    const kept = prevId && plans.find(p => p.id === prevId);
+    if (kept) {
+      active = kept;
+      redraw();
+    } else if (plans.length > 0) {
+      openPlan(plans[0].id);
+    } else {
+      active = null; redraw();
+    }
   }
 
   function persist() {
