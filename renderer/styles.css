@@ -1738,6 +1738,161 @@ canvas {
   width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0;
 }
 
+/* ── Canvas + detail row ─────────────────────────────────────────────────── */
+.plans-canvas-row {
+  display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden;
+}
+.plans-wrap { flex: 1; min-width: 0; }
+
+/* ── Panel de detalle de tarea ───────────────────────────────────────────── */
+.pln-detail {
+  width: 0; flex-shrink: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  border-left: 1.5px solid var(--border);
+  background: var(--surface);
+  transition: width .28s cubic-bezier(.4,0,.2,1);
+}
+.pln-detail.active { width: 310px; }
+
+/* Minimap */
+.pln-det-mini {
+  height: 130px; flex-shrink: 0;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  overflow: hidden; position: relative;
+}
+.pln-det-mini svg { display: block; width: 100%; height: 100%; }
+
+/* Cabecera (volver + badge plan) */
+.pln-det-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+}
+.pln-det-back {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text2); font-size: 12px; font-weight: 600;
+  padding: 4px 6px; border-radius: 7px;
+  transition: background .12s, color .12s;
+}
+.pln-det-back:hover { background: var(--surface2); color: var(--text); }
+.pln-det-plan-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  border-radius: 100px; background: color-mix(in srgb, var(--pc) 14%, var(--surface2));
+  color: var(--pc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Cuerpo: scroll area */
+.pln-det-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 12px 14px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pln-det-title {
+  font-size: 20px; font-weight: 800; line-height: 1.2;
+  color: var(--text); margin: 0;
+  word-break: break-word;
+}
+.pln-det-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.pln-det-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11.5px; font-weight: 600; padding: 3px 8px;
+  border-radius: 100px; background: var(--surface2); color: var(--text2);
+}
+.pln-det-chip.gasto   { background: color-mix(in srgb, var(--red)   12%, transparent); color: var(--red);   }
+.pln-det-chip.ingreso { background: color-mix(in srgb, var(--green) 12%, transparent); color: var(--green); }
+
+/* Barra de progreso */
+.pln-det-prog-wrap {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.pln-det-prog-bg {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: var(--surface2); overflow: hidden;
+}
+.pln-det-prog-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--pc, var(--accent));
+  transition: width .35s;
+}
+.pln-det-prog-lbl {
+  font-size: 11.5px; font-weight: 700; color: var(--text2);
+  flex-shrink: 0; font-variant-numeric: tabular-nums;
+}
+
+/* Lista de subtareas */
+.pln-det-items { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+.pln-det-empty { font-size: 13px; color: var(--text2); text-align: center; padding: 14px 0; margin: 0; }
+
+.pln-det-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px;
+  background: var(--surface2); cursor: pointer;
+  transition: background .12s;
+  border: 1.5px solid transparent;
+}
+.pln-det-item:hover { background: color-mix(in srgb, var(--pc) 6%, var(--surface2)); border-color: color-mix(in srgb, var(--pc) 18%, transparent); }
+.pln-det-item.done  { opacity: .7; }
+
+.pln-det-cb {
+  width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0;
+  border: 2px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .14s, background .14s;
+}
+.pln-det-item:hover .pln-det-cb { border-color: var(--pc); }
+.pln-det-cb.done { background: var(--pc); border-color: var(--pc); color: #fff; }
+.pln-det-txt {
+  flex: 1; font-size: 13px; line-height: 1.35; color: var(--text);
+}
+.pln-det-txt.done { text-decoration: line-through; color: var(--text2); }
+
+/* Botón siguiente tarea */
+.pln-det-next {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  cursor: pointer; width: 100%; text-align: left;
+  transition: border-color .15s, background .15s;
+  flex-shrink: 0;
+}
+.pln-det-next:hover {
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 8%, var(--surface2));
+}
+.pdn-labels { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pdn-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); }
+.pdn-title { font-size: 13.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Responsive: mobile / tablet ─────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .plans-sidebar { width: 160px; min-width: 140px; }
+}
+
+@media (max-width: 500px) {
+  .plans-sidebar { display: none; }
+  .plans-view { flex-direction: column; }
+  .plans-canvas-row { flex-direction: column; }
+
+  /* En mobile el detail es un bottom-sheet */
+  .pln-detail {
+    width: 100% !important;
+    height: 0; flex-shrink: 0;
+    border-left: none;
+    border-top: 1.5px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 24px rgba(0,0,0,.14);
+    transition: height .3s cubic-bezier(.4,0,.2,1);
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+  }
+  .pln-detail.active { height: 72vh; }
+  .plans-canvas-row { position: relative; flex: 1; min-height: 0; }
+  .plans-wrap { flex: 1 1 auto; }
+
+  .pln-det-mini { height: 100px; }
+  .pln-det-title { font-size: 18px; }
+}
+
 /* Topbar active state for Planes button */
 #planesBtn.active { background: var(--accent); color: #fff; }
 

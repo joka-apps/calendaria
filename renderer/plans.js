@@ -20,6 +20,12 @@
 
   // ── DOM ────────────────────────────────────────────────────────────────────
   let $view, $wrap, $world, $svg, $plansList, $planHeader, $empty;
+  let $plnDetail, $plnDetailSvg, $plnDetailTitle, $plnDetailItems;
+  let $plnDetailMeta, $plnDetailProgWrap, $plnDetailProgFill, $plnDetailProgLbl;
+  let $plnDetailNext, $plnDetailNextTitle, $plnDetailPlanBadge;
+
+  // ── Estado del panel de detalle ────────────────────────────────────────────
+  let detailId = null; // id del nodo de tarea actualmente en el panel
 
   // ── Geometria ──────────────────────────────────────────────────────────────
   // Altura dinamica segun contenido del nodo
@@ -141,6 +147,7 @@
   function openPlan(id) {
     active = plans.find(p => p.id === id) || null;
     sel = null; addMode = null;
+    closeDetail();
     clearModes();
     pz = { x: 60, y: 60, z: 1 };
     renderSidebar();
@@ -205,6 +212,7 @@
     if (!active) return;
     active.nodes.forEach(n => $world.insertBefore(buildNode(n), $svg));
     drawEdges();
+    if (detailId) renderDetail();
   }
 
   function applyPZ() {
@@ -373,7 +381,12 @@
       drawEdges();
     });
 
-    div.addEventListener('click', ev => { ev.stopPropagation(); sel = { type:'node', id:n.id }; drawEdges(); });
+    div.addEventListener('click', ev => {
+      ev.stopPropagation();
+      sel = { type:'node', id:n.id };
+      drawEdges();
+      if (n.type === 'task') openDetail(n.id);
+    });
     return div;
   }
 
@@ -678,15 +691,18 @@
 
     const cb = document.createElement('div');
     cb.className = 'pn-item-cb' + (item.done ? ' done' : '');
-    if (item.done) cb.innerHTML = '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    cb.dataset.iid = item.id;
+    const CHECK = '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    if (item.done) cb.innerHTML = CHECK;
     cb.addEventListener('click', ev => {
       ev.stopPropagation();
       item.done = !item.done;
       persist(); notifyCal();
       cb.className = 'pn-item-cb' + (item.done ? ' done' : '');
-      cb.innerHTML = item.done ? '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      cb.innerHTML = item.done ? CHECK : '';
       txt.className = 'pn-item-txt' + (item.done ? ' done' : '');
-      // Notificar al panel del dia si está abierto
+      // Sincronizar con el panel de detalle si está abierto en este nodo
+      if (detailId === n.id) renderDetailItems(n);
       window.dispatchEvent(new CustomEvent('plans-items-changed'));
     });
 
@@ -889,8 +905,250 @@
       if (!$view?.classList.contains('active')) return;
       if (ev.target.tagName === 'INPUT' || ev.target.contentEditable === 'true') return;
       if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); deleteSelected(); }
-      if (ev.key === 'Escape') { setMode(null); sel = null; drawEdges(); }
+      if (ev.key === 'Escape') { closeDetail(); setMode(null); sel = null; drawEdges(); }
     });
+  }
+
+  // ── Panel de detalle de tarea ──────────────────────────────────────────────
+  function openDetail(nodeId) {
+    if (!active) return;
+    const node = active.nodes.find(n => n.id === nodeId && n.type === 'task');
+    if (!node) return;
+    detailId = nodeId;
+    $plnDetail?.classList.add('active');
+    $plnDetail?.style.setProperty('--pc', active.color);
+    renderDetail();
+  }
+
+  function closeDetail() {
+    detailId = null;
+    $plnDetail?.classList.remove('active');
+  }
+
+  function renderDetail() {
+    if (!detailId || !active || !$plnDetail) return;
+    const node = active.nodes.find(n => n.id === detailId);
+    if (!node) { closeDetail(); return; }
+
+    // Badge del plan
+    if ($plnDetailPlanBadge) $plnDetailPlanBadge.textContent = active.title;
+
+    // Titulo
+    if ($plnDetailTitle) $plnDetailTitle.textContent = node.title || 'Sin nombre';
+
+    // Meta chips
+    if ($plnDetailMeta) {
+      $plnDetailMeta.innerHTML = '';
+      if (node.date) {
+        const c = document.createElement('span');
+        c.className = 'pln-det-chip';
+        c.textContent = fmtDate(node.date);
+        $plnDetailMeta.appendChild(c);
+      }
+      if (node.startDate || node.endDate) {
+        const c = document.createElement('span');
+        c.className = 'pln-det-chip';
+        c.textContent = fmtDateRange(node);
+        $plnDetailMeta.appendChild(c);
+      }
+      if (node.amount != null) {
+        const c = document.createElement('span');
+        c.className = 'pln-det-chip ' + (node.amountType || 'gasto');
+        c.textContent = (node.amountType === 'ingreso' ? '+' : '-') + ' S/. ' + node.amount.toFixed(2);
+        $plnDetailMeta.appendChild(c);
+      }
+    }
+
+    // Progreso
+    const items = node.items || [];
+    const done  = items.filter(i => i.done).length;
+    if (items.length && $plnDetailProgWrap) {
+      $plnDetailProgWrap.style.display = '';
+      if ($plnDetailProgFill) $plnDetailProgFill.style.width = (done / items.length * 100).toFixed(0) + '%';
+      if ($plnDetailProgLbl)  $plnDetailProgLbl.textContent  = done + ' / ' + items.length;
+    } else if ($plnDetailProgWrap) {
+      $plnDetailProgWrap.style.display = 'none';
+    }
+
+    // Items
+    renderDetailItems(node);
+
+    // Minimap
+    renderMinimap();
+
+    // Siguiente tarea
+    const next = findNextTask(detailId);
+    if ($plnDetailNext) {
+      if (next) {
+        $plnDetailNext.style.display = '';
+        if ($plnDetailNextTitle) $plnDetailNextTitle.textContent = next.title || 'Sin nombre';
+        $plnDetailNext.onclick = () => openDetail(next.id);
+      } else {
+        $plnDetailNext.style.display = 'none';
+      }
+    }
+  }
+
+  function renderDetailItems(node) {
+    if (!$plnDetailItems) return;
+    $plnDetailItems.innerHTML = '';
+    const items = node.items || [];
+
+    if (!items.length) {
+      const p = document.createElement('p');
+      p.className = 'pln-det-empty';
+      p.textContent = 'Sin subtareas. Expande el nodo en el canvas para agregar.';
+      $plnDetailItems.appendChild(p);
+      return;
+    }
+
+    for (const item of items) {
+      const row = document.createElement('div');
+      row.className = 'pln-det-item' + (item.done ? ' done' : '');
+
+      const cb = document.createElement('div');
+      cb.className = 'pln-det-cb' + (item.done ? ' done' : '');
+      const CHECK_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      if (item.done) cb.innerHTML = CHECK_SVG;
+
+      const txt = document.createElement('span');
+      txt.className = 'pln-det-txt' + (item.done ? ' done' : '');
+      txt.textContent = item.text;
+
+      row.addEventListener('click', () => {
+        item.done = !item.done;
+        persist(); notifyCal();
+        // Update DOM sin redraw
+        row.classList.toggle('done', item.done);
+        cb.className  = 'pln-det-cb' + (item.done ? ' done' : '');
+        cb.innerHTML  = item.done ? CHECK_SVG : '';
+        txt.className = 'pln-det-txt' + (item.done ? ' done' : '');
+        // Actualizar progreso
+        const allItems  = node.items || [];
+        const doneCount = allItems.filter(i => i.done).length;
+        if ($plnDetailProgFill) $plnDetailProgFill.style.width = allItems.length ? (doneCount / allItems.length * 100).toFixed(0) + '%' : '0%';
+        if ($plnDetailProgLbl)  $plnDetailProgLbl.textContent  = doneCount + ' / ' + allItems.length;
+        // Actualizar checkbox en el canvas si el nodo está expandido
+        const canvasCb = $world?.querySelector('[data-node-id="' + node.id + '"] [data-iid="' + item.id + '"]');
+        if (canvasCb) {
+          canvasCb.className = 'pn-item-cb' + (item.done ? ' done' : '');
+          canvasCb.innerHTML = item.done ? CHECK_SVG : '';
+          const canvasTxt = canvasCb.nextElementSibling;
+          if (canvasTxt) canvasTxt.className = 'pn-item-txt' + (item.done ? ' done' : '');
+        }
+        window.dispatchEvent(new CustomEvent('plans-items-changed'));
+      });
+
+      row.append(cb, txt);
+      $plnDetailItems.appendChild(row);
+    }
+  }
+
+  function renderMinimap() {
+    if (!$plnDetailSvg || !active?.nodes.length) {
+      if ($plnDetailSvg) $plnDetailSvg.setAttribute('viewBox', '0 0 1 1');
+      return;
+    }
+
+    $plnDetailSvg.innerHTML = '';
+
+    // Bounding box (usa altura base, sin expansion)
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const n of active.nodes) {
+      const w = n.type === 'task' ? TW : GS;
+      const len    = (n.title || '').length;
+      const rows   = len > 18 ? 2 : 1;
+      const extras = (n.date ? 1 : 0) + ((n.startDate || n.endDate) ? 1 : 0) + (n.amount != null ? 1 : 0);
+      const h = n.type === 'task' ? Math.max(52, 24 + rows * 18 + extras * 17 + 8) + EXPAND_H : GS;
+      x0 = Math.min(x0, n.x);     y0 = Math.min(y0, n.y);
+      x1 = Math.max(x1, n.x + w); y1 = Math.max(y1, n.y + h);
+    }
+
+    const PAD = 18;
+    $plnDetailSvg.setAttribute('viewBox', (x0 - PAD) + ' ' + (y0 - PAD) + ' ' + (x1 - x0 + PAD * 2) + ' ' + (y1 - y0 + PAD * 2));
+
+    // Aristas
+    for (const e of active.edges) {
+      const s = active.nodes.find(n => n.id === e.from);
+      const d = active.nodes.find(n => n.id === e.to);
+      if (!s || !d) continue;
+      const sw = s.type === 'task' ? TW : GS;
+      const sh = s.type === 'task' ? 52 + EXPAND_H : GS;
+      const dw = d.type === 'task' ? TW : GS;
+      const sx = s.x + sw / 2, sy = s.y + sh;
+      const dx = d.x + dw / 2, dy = d.y;
+      const my = (sy + dy) / 2;
+      const path = svgEl('path');
+      path.setAttribute('d', 'M ' + sx + ' ' + sy + ' C ' + sx + ' ' + my + ', ' + dx + ' ' + my + ', ' + dx + ' ' + dy);
+      path.setAttribute('stroke', 'var(--text2)');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('opacity', '0.35');
+      $plnDetailSvg.appendChild(path);
+    }
+
+    // Nodos
+    for (const n of active.nodes) {
+      const isActive = n.id === detailId;
+      if (n.type === 'task') {
+        const NH = 44 + EXPAND_H;
+        const rect = svgEl('rect');
+        rect.setAttribute('x', n.x); rect.setAttribute('y', n.y);
+        rect.setAttribute('width', TW); rect.setAttribute('height', NH);
+        rect.setAttribute('rx', '7');
+        rect.setAttribute('fill', isActive ? active.color : 'var(--surface2)');
+        rect.setAttribute('stroke', isActive ? active.color : 'var(--border)');
+        rect.setAttribute('stroke-width', isActive ? '3' : '1.5');
+        rect.style.cursor = 'pointer';
+        rect.addEventListener('click', () => openDetail(n.id));
+        $plnDetailSvg.appendChild(rect);
+
+        const t = (n.title || '').slice(0, 15) + ((n.title || '').length > 15 ? '…' : '');
+        const lbl = svgEl('text');
+        lbl.setAttribute('x', n.x + TW / 2);
+        lbl.setAttribute('y', n.y + NH / 2 + 4);
+        lbl.setAttribute('text-anchor', 'middle');
+        lbl.setAttribute('font-size', '11');
+        lbl.setAttribute('font-weight', isActive ? '700' : '500');
+        lbl.setAttribute('fill', isActive ? '#fff' : 'var(--text2)');
+        lbl.setAttribute('pointer-events', 'none');
+        lbl.textContent = t;
+        $plnDetailSvg.appendChild(lbl);
+      } else {
+        const r = GS / 2 - 2;
+        const circ = svgEl('circle');
+        circ.setAttribute('cx', n.x + GS / 2); circ.setAttribute('cy', n.y + GS / 2);
+        circ.setAttribute('r', r);
+        circ.setAttribute('fill', 'var(--surface2)');
+        circ.setAttribute('stroke', 'var(--border)');
+        circ.setAttribute('stroke-width', '1.5');
+        $plnDetailSvg.appendChild(circ);
+
+        const lbl = svgEl('text');
+        lbl.setAttribute('x', n.x + GS / 2); lbl.setAttribute('y', n.y + GS / 2 + 4);
+        lbl.setAttribute('text-anchor', 'middle');
+        lbl.setAttribute('font-size', '12'); lbl.setAttribute('font-weight', '700');
+        lbl.setAttribute('fill', 'var(--text2)');
+        lbl.textContent = n.type === 'and' ? 'Y' : 'O';
+        $plnDetailSvg.appendChild(lbl);
+      }
+    }
+  }
+
+  function findNextTask(nodeId) {
+    if (!active) return null;
+    const visited = new Set([nodeId]);
+    const queue   = active.edges.filter(e => e.from === nodeId).map(e => e.to);
+    while (queue.length) {
+      const id = queue.shift();
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const n = active.nodes.find(n => n.id === id);
+      if (!n) continue;
+      if (n.type === 'task') return n;
+      active.edges.filter(e => e.from === id).forEach(e => queue.push(e.to));
+    }
+    return null;
   }
 
   // ── Sidebar de planes ──────────────────────────────────────────────────────
@@ -970,6 +1228,21 @@
       $plansList = document.getElementById('plansList');
       $planHeader = document.getElementById('planHeader');
       $empty     = document.getElementById('plansEmpty');
+
+      // Panel de detalle
+      $plnDetail        = document.getElementById('plnDetail');
+      $plnDetailSvg     = document.getElementById('plnDetailSvg');
+      $plnDetailTitle   = document.getElementById('plnDetailTitle');
+      $plnDetailItems   = document.getElementById('plnDetailItems');
+      $plnDetailMeta    = document.getElementById('plnDetailMeta');
+      $plnDetailProgWrap  = document.getElementById('plnDetailProgWrap');
+      $plnDetailProgFill  = document.getElementById('plnDetailProgFill');
+      $plnDetailProgLbl   = document.getElementById('plnDetailProgLbl');
+      $plnDetailNext      = document.getElementById('plnDetailNext');
+      $plnDetailNextTitle = document.getElementById('plnDetailNextTitle');
+      $plnDetailPlanBadge = document.getElementById('plnDetailPlanBadge');
+
+      document.getElementById('plnDetailBack')?.addEventListener('click', closeDetail);
 
       document.getElementById('plnNewBtn')?.addEventListener('click', newPlan);
       document.getElementById('plnTaskBtn')?.addEventListener('click', () => setMode('task'));

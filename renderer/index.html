@@ -349,15 +349,65 @@
         </div>
       </div>
 
-      <!-- Canvas infinito -->
-      <div class="plans-wrap" id="plansWrap">
-        <div class="plans-world" id="plansWorld">
-          <svg class="plans-svg" id="plansSvg"></svg>
+      <!-- Canvas + detail panel row -->
+      <div class="plans-canvas-row" id="plnsCanvasRow">
+
+        <!-- Canvas infinito -->
+        <div class="plans-wrap" id="plansWrap">
+          <div class="plans-world" id="plansWorld">
+            <svg class="plans-svg" id="plansSvg"></svg>
+          </div>
+          <div class="plans-empty" id="plansEmpty">
+            <span>Crea un plan en la lista o selecciona uno existente</span>
+          </div>
         </div>
-        <div class="plans-empty" id="plansEmpty">
-          <span>Crea un plan en la lista o selecciona uno existente</span>
-        </div>
-      </div>
+
+        <!-- Panel de detalle de tarea -->
+        <div class="pln-detail" id="plnDetail">
+
+          <!-- Minimap: flujo del plan a escala reducida -->
+          <div class="pln-det-mini">
+            <svg id="plnDetailSvg" xmlns="http://www.w3.org/2000/svg"
+                 width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+
+          <!-- Cabecera: volver + nombre del plan -->
+          <div class="pln-det-head">
+            <button class="pln-det-back" id="plnDetailBack" title="Volver al canvas">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <span>Plan</span>
+            </button>
+            <span class="pln-det-plan-badge" id="plnDetailPlanBadge"></span>
+          </div>
+
+          <!-- Cuerpo: titulo + meta + items + siguiente -->
+          <div class="pln-det-body">
+            <h2 class="pln-det-title" id="plnDetailTitle"></h2>
+            <div class="pln-det-meta" id="plnDetailMeta"></div>
+
+            <!-- Barra de progreso -->
+            <div class="pln-det-prog-wrap" id="plnDetailProgWrap" style="display:none">
+              <div class="pln-det-prog-bg">
+                <div class="pln-det-prog-fill" id="plnDetailProgFill"></div>
+              </div>
+              <span class="pln-det-prog-lbl" id="plnDetailProgLbl"></span>
+            </div>
+
+            <!-- Lista de subtareas -->
+            <div class="pln-det-items" id="plnDetailItems"></div>
+
+            <!-- Botón siguiente tarea -->
+            <button class="pln-det-next" id="plnDetailNext" style="display:none">
+              <div class="pdn-labels">
+                <span class="pdn-eyebrow">Siguiente tarea</span>
+                <span class="pdn-title" id="plnDetailNextTitle"></span>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div><!-- /pln-detail -->
+
+      </div><!-- /plans-canvas-row -->
 
     </div>
   </div><!-- /plans-view -->
