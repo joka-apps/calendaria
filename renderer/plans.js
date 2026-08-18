@@ -23,6 +23,7 @@
   let $plnDetail, $plnDetailSvg, $plnDetailTitle, $plnDetailItems;
   let $plnDetailMeta, $plnDetailProgWrap, $plnDetailProgFill, $plnDetailProgLbl;
   let $plnDetailNext, $plnDetailNextTitle, $plnDetailPlanBadge;
+  let $plnHdrWrap, $plnPlanDrop;
 
   // ── Estado del panel de detalle ────────────────────────────────────────────
   let detailId = null; // id del nodo de tarea actualmente en el panel
@@ -1186,6 +1187,28 @@
       li.addEventListener('click', () => openPlan(p.id));
       $plansList.appendChild(li);
     }
+    renderPlanDropdown();
+  }
+
+  function renderPlanDropdown() {
+    if (!$plnPlanDrop) return;
+    $plnPlanDrop.innerHTML = '';
+    for (const p of plans) {
+      const item = document.createElement('div');
+      item.className = 'pln-drop-item' + (active?.id === p.id ? ' active' : '');
+      item.style.setProperty('--pc', p.color);
+      const dot = document.createElement('span');
+      dot.className = 'pln-drop-dot';
+      const lbl = document.createElement('span');
+      lbl.textContent = p.title;
+      item.append(dot, lbl);
+      item.addEventListener('click', ev => {
+        ev.stopPropagation();
+        openPlan(p.id);
+        $plnPlanDrop.classList.remove('open');
+      });
+      $plnPlanDrop.appendChild(item);
+    }
   }
 
   // ── Notificar al calendario ────────────────────────────────────────────────
@@ -1225,9 +1248,20 @@
       $wrap      = document.getElementById('plansWrap');
       $world     = document.getElementById('plansWorld');
       $svg       = document.getElementById('plansSvg');
-      $plansList = document.getElementById('plansList');
+      $plansList  = document.getElementById('plansList');
       $planHeader = document.getElementById('planHeader');
-      $empty     = document.getElementById('plansEmpty');
+      $empty      = document.getElementById('plansEmpty');
+      $plnHdrWrap = document.getElementById('plnHdrWrap');
+      $plnPlanDrop = document.getElementById('plnPlanDrop');
+
+      $plnHdrWrap?.addEventListener('click', ev => {
+        if (!$plnPlanDrop) return;
+        const chev = document.getElementById('plnHdrChev');
+        if (chev && window.getComputedStyle(chev).display === 'none') return;
+        ev.stopPropagation();
+        $plnPlanDrop.classList.toggle('open');
+      });
+      document.addEventListener('click', () => $plnPlanDrop?.classList.remove('open'));
 
       // Panel de detalle
       $plnDetail        = document.getElementById('plnDetail');

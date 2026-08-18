@@ -1291,11 +1291,39 @@ canvas {
   background: var(--surface);
   flex-shrink: 0;
 }
+.pln-hdr-wrap {
+  position: relative;
+  display: flex; align-items: center; gap: 5px;
+  user-select: none;
+}
 .plan-header {
   font-size: 14px; font-weight: 600; color: var(--text);
   border-left: 3px solid var(--pc, var(--accent));
   padding-left: 8px;
 }
+.pln-hdr-chev { display: none; color: var(--text2); flex-shrink: 0; }
+.pln-plan-drop {
+  display: none;
+  position: absolute; top: calc(100% + 10px); left: 0;
+  min-width: 190px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.22);
+  z-index: 200;
+  padding: 5px;
+  flex-direction: column; gap: 2px;
+}
+.pln-plan-drop.open { display: flex; }
+.pln-drop-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 7px;
+  cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text);
+  transition: background .12s;
+}
+.pln-drop-item:hover { background: var(--surface2); }
+.pln-drop-item.active { background: color-mix(in srgb, var(--pc) 14%, transparent); }
+.pln-drop-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); flex-shrink: 0; }
 .plans-tb-btns { display: flex; align-items: center; gap: 4px; }
 .pln-btn {
   height: 28px; padding: 0 11px; border-radius: 6px; border: 1.5px solid var(--border);
@@ -1881,6 +1909,8 @@ canvas {
   .plans-view { flex-direction: column; }
   .plans-canvas-row { flex-direction: column; position: relative; flex: 1; min-height: 0; }
   .plans-wrap { flex: 1 1 auto; }
+  .pln-hdr-wrap { cursor: pointer; }
+  .pln-hdr-chev { display: block; }
 
   /* En mobile/tablet el detail es un bottom-sheet */
   .pln-detail {

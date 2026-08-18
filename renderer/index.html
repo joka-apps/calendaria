@@ -337,7 +337,13 @@
 
       <!-- Toolbar -->
       <div class="plans-toolbar">
-        <span class="plan-header" id="planHeader">Selecciona un plan</span>
+        <div class="pln-hdr-wrap" id="plnHdrWrap">
+          <span class="plan-header" id="planHeader">Selecciona un plan</span>
+          <svg class="pln-hdr-chev" id="plnHdrChev" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 4 6 8 10 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="pln-plan-drop" id="plnPlanDrop"></div>
+        </div>
         <div class="plans-tb-btns">
           <button class="pln-btn" id="plnTaskBtn" title="Agregar tarea (clic en el canvas)">Tarea</button>
           <button class="pln-btn pln-gw-btn" id="plnAndBtn" title="Compuerta Y — todas las ramas deben completarse">Y</button>
