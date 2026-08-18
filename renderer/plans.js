@@ -30,6 +30,39 @@
   // ── Estado del panel de detalle ────────────────────────────────────────────
   let detailId = null; // id del nodo de tarea actualmente en el panel
 
+  // ── Historial undo/redo ────────────────────────────────────────────────────
+  let histStack = [];
+  let histIdx   = -1;
+  let isRestoring = false;
+  const HIST_MAX  = 60;
+
+  function snap() {
+    if (isRestoring) return;
+    histStack.splice(histIdx + 1);
+    histStack.push(JSON.stringify(plans));
+    if (histStack.length > HIST_MAX) histStack.shift(); else histIdx++;
+  }
+
+  function restoreHist(json) {
+    isRestoring = true;
+    const prevId = active?.id;
+    plans = JSON.parse(json);
+    plans.forEach(p => { if (!p.nodes) p.nodes = []; if (!p.edges) p.edges = []; });
+    expanded.clear();
+    detailId = null;
+    $plnDetail?.classList.remove('active');
+    const kept = prevId ? plans.find(p => p.id === prevId) : null;
+    active = kept || plans[0] || null;
+    renderSidebar();
+    redraw();
+    persist();
+    notifyCal();
+    isRestoring = false;
+  }
+
+  function undo() { if (histIdx > 0) { histIdx--; restoreHist(histStack[histIdx]); } }
+  function redo() { if (histIdx < histStack.length - 1) { histIdx++; restoreHist(histStack[histIdx]); } }
+
   // ── Geometria ──────────────────────────────────────────────────────────────
   // Altura dinamica segun contenido del nodo
   const EXPAND_H = 24; // altura de la barra de expansion en la base del nodo
@@ -99,6 +132,7 @@
     } else {
       active = null; redraw();
     }
+    if (!isRestoring) snap(); // estado inicial de la sesion
   }
 
   function persist() {
@@ -186,13 +220,14 @@
     const n = { id: uid(), type, title: type === 'task' ? 'Tarea' : '', date: null, startDate: null, endDate: null, items: [], x: Math.round(x), y: Math.round(y) };
     active.nodes.push(n);
     sel = { type: 'node', id: n.id };
-    persist();
+    snap(); persist();
     redraw();
     if (type === 'task') setTimeout(() => startEditTitle(n.id), 30);
   }
 
   function deleteSelected() {
     if (!active || !sel) return;
+    snap();
     if (sel.type === 'node') {
       active.nodes = active.nodes.filter(n => n.id !== sel.id);
       active.edges = active.edges.filter(e => e.from !== sel.id && e.to !== sel.id);
@@ -400,6 +435,7 @@
       if (ev.target.classList.contains('pn-inp') || ev.target.closest('.pn-items-panel') || ev.target.closest('.pn-expand-bar')) return;
       ev.stopPropagation();
       sel = { type: 'node', id: n.id };
+      snap(); // snapshot antes de arrastrar
       const rect = $wrap.getBoundingClientRect();
       drag = {
         kind: 'node', id: n.id,
@@ -766,6 +802,7 @@
     del.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     del.addEventListener('click', ev => {
       ev.stopPropagation();
+      snap();
       n.items = n.items.filter(i => i.id !== item.id);
       persist(); redraw(); notifyCal();
       window.dispatchEvent(new CustomEvent('plans-items-changed'));
@@ -778,6 +815,7 @@
   function addSubItem(n, inp) {
     const text = inp.value.trim();
     if (!text) { inp.focus(); return; }
+    snap();
     if (!n.items) n.items = [];
     n.items.push({ id: uid(), text, done: false });
     persist(); redraw(); notifyCal();
@@ -811,6 +849,7 @@
 
     function commit() {
       const v = inp.value.trim();
+      if (v && v !== n.title) snap();
       n.title = v || n.title;
       el.textContent = n.title;
       delete el.dataset.editing;
@@ -916,6 +955,7 @@
         if (toId && toId !== conn.fromId && active) {
           const dup = active.edges.some(e => e.from === conn.fromId && e.to === toId);
           if (!dup) {
+            snap();
             active.edges.push({ id: uid(), from: conn.fromId, to: toId });
             persist();
           }
@@ -931,7 +971,10 @@
   function initKeyboard() {
     window.addEventListener('keydown', ev => {
       if (!$view?.classList.contains('active')) return;
-      if (ev.target.tagName === 'INPUT' || ev.target.contentEditable === 'true') return;
+      const inInput = ev.target.tagName === 'INPUT' || ev.target.contentEditable === 'true';
+      if ((ev.ctrlKey || ev.metaKey) && ev.key === 'z' && !ev.shiftKey) { ev.preventDefault(); undo(); return; }
+      if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'y' || (ev.key === 'z' && ev.shiftKey))) { ev.preventDefault(); redo(); return; }
+      if (inInput) return;
       if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); deleteSelected(); }
       if (ev.key === 'Escape') { closeDetail(); setMode(null); sel = null; drawEdges(); }
     });
@@ -1247,6 +1290,32 @@
     renderPlanDropdown();
   }
 
+  function startPlanRename() {
+    if (!active || !$planHeader) return;
+    const p = active;
+    const orig = p.title;
+    const inp = document.createElement('input');
+    inp.value = orig;
+    inp.className = 'pln-hdr-inp';
+    $planHeader.replaceWith(inp);
+    inp.focus(); inp.select();
+    inp.addEventListener('mousedown', ev => ev.stopPropagation());
+    inp.addEventListener('click', ev => ev.stopPropagation());
+    const commit = () => {
+      const v = inp.value.trim() || orig;
+      if (v !== p.title) { snap(); p.title = v; persist(); }
+      inp.replaceWith($planHeader);
+      $planHeader.textContent = p.title;
+      $planHeader.style.setProperty('--pc', active?.color || 'var(--accent)');
+      renderSidebar();
+    };
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); inp.blur(); }
+      if (e.key === 'Escape') { inp.value = orig; inp.blur(); }
+    });
+  }
+
   function renderPlanDropdown() {
     if (!$plnPlanDrop) return;
     $plnPlanDrop.innerHTML = '';
@@ -1339,6 +1408,10 @@
       document.getElementById('plnDetailBack')?.addEventListener('click', closeDetail);
       document.getElementById('plnPickCancel')?.addEventListener('click', hideNextPicker);
       $plnNextPicker?.addEventListener('click', ev => { if (ev.target === $plnNextPicker) hideNextPicker(); });
+
+      // Renombrar plan desde la cabecera del toolbar
+      $planHeader?.addEventListener('dblclick', ev => { ev.stopPropagation(); startPlanRename(); });
+      document.getElementById('plnHdrRename')?.addEventListener('click', ev => { ev.stopPropagation(); startPlanRename(); });
 
       document.getElementById('plnNewBtn')?.addEventListener('click', newPlan);
       document.getElementById('plnTaskBtn')?.addEventListener('click', () => setMode('task'));

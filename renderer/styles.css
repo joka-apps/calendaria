@@ -1302,6 +1302,22 @@ canvas {
   padding-left: 8px;
 }
 .pln-hdr-chev { display: none; color: var(--text2); flex-shrink: 0; }
+.pln-hdr-rename {
+  opacity: 0; width: 20px; height: 20px; flex-shrink: 0;
+  border: none; background: transparent; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; cursor: pointer; padding: 0;
+  transition: opacity .12s, color .12s, background .12s;
+}
+.pln-hdr-wrap:hover .pln-hdr-rename { opacity: .6; }
+.pln-hdr-rename:hover { opacity: 1 !important; color: var(--text); background: var(--surface2); }
+.pln-hdr-inp {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  border: none; border-bottom: 2px solid var(--accent);
+  background: transparent; outline: none; font-family: inherit;
+  max-width: 160px; padding: 0 2px;
+  border-left: 3px solid var(--pc, var(--accent)); padding-left: 8px;
+}
 .pln-plan-drop {
   display: none;
   position: absolute; top: calc(100% + 10px); left: 0;
@@ -1917,6 +1933,7 @@ canvas {
   .plans-wrap { flex: 1 1 auto; }
   .pln-hdr-wrap { cursor: pointer; }
   .pln-hdr-chev { display: block; }
+  .pln-hdr-rename { opacity: .7; }
 
   /* En mobile el detail ocupa toda la pantalla */
   .pln-detail {
