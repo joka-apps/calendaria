@@ -22,7 +22,8 @@
   let $view, $wrap, $world, $svg, $plansList, $planHeader, $empty;
   let $plnDetail, $plnDetailSvg, $plnDetailTitle, $plnDetailItems;
   let $plnDetailMeta, $plnDetailProgWrap, $plnDetailProgFill, $plnDetailProgLbl;
-  let $plnDetailNext, $plnDetailNextTitle, $plnDetailPlanBadge;
+  let $plnDetailNext, $plnDetailNextTitle, $plnDetailNextEyebrow, $plnDetailPlanBadge;
+  let $plnNextPicker, $plnNextPickList;
   let $plnHdrWrap, $plnPlanDrop;
 
   // ── Estado del panel de detalle ────────────────────────────────────────────
@@ -924,6 +925,7 @@
   function closeDetail() {
     detailId = null;
     $plnDetail?.classList.remove('active');
+    hideNextPicker();
   }
 
   function renderDetail() {
@@ -977,13 +979,19 @@
     // Minimap
     renderMinimap();
 
-    // Siguiente tarea
-    const next = findNextTask(detailId);
+    // Siguiente paso (soporta bifurcaciones)
+    const nexts = findNextTasks(detailId);
     if ($plnDetailNext) {
-      if (next) {
+      if (nexts.length === 1) {
         $plnDetailNext.style.display = '';
-        if ($plnDetailNextTitle) $plnDetailNextTitle.textContent = next.title || 'Sin nombre';
-        $plnDetailNext.onclick = () => openDetail(next.id);
+        if ($plnDetailNextEyebrow) $plnDetailNextEyebrow.textContent = 'Siguiente paso';
+        if ($plnDetailNextTitle)   $plnDetailNextTitle.textContent   = nexts[0].title || 'Sin nombre';
+        $plnDetailNext.onclick = () => openDetail(nexts[0].id);
+      } else if (nexts.length > 1) {
+        $plnDetailNext.style.display = '';
+        if ($plnDetailNextEyebrow) $plnDetailNextEyebrow.textContent = 'Elegir siguiente paso';
+        if ($plnDetailNextTitle)   $plnDetailNextTitle.textContent   = nexts.length + ' opciones';
+        $plnDetailNext.onclick = () => showNextPicker(nexts);
       } else {
         $plnDetailNext.style.display = 'none';
       }
@@ -1136,20 +1144,43 @@
     }
   }
 
-  function findNextTask(nodeId) {
-    if (!active) return null;
+  function findNextTasks(nodeId) {
+    if (!active) return [];
     const visited = new Set([nodeId]);
     const queue   = active.edges.filter(e => e.from === nodeId).map(e => e.to);
+    const results = [];
     while (queue.length) {
       const id = queue.shift();
       if (visited.has(id)) continue;
       visited.add(id);
       const n = active.nodes.find(n => n.id === id);
       if (!n) continue;
-      if (n.type === 'task') return n;
+      if (n.type === 'task') { results.push(n); continue; }
       active.edges.filter(e => e.from === id).forEach(e => queue.push(e.to));
     }
-    return null;
+    return results;
+  }
+
+  function showNextPicker(tasks) {
+    if (!$plnNextPicker || !$plnNextPickList) return;
+    $plnNextPickList.innerHTML = '';
+    for (const t of tasks) {
+      const btn = document.createElement('button');
+      btn.className = 'pln-pick-opt';
+      btn.style.setProperty('--pc', active?.color || 'var(--accent)');
+      const dot = document.createElement('span');
+      dot.className = 'pln-pick-opt-dot';
+      const lbl = document.createElement('span');
+      lbl.textContent = t.title || 'Sin nombre';
+      btn.append(dot, lbl);
+      btn.addEventListener('click', () => { hideNextPicker(); openDetail(t.id); });
+      $plnNextPickList.appendChild(btn);
+    }
+    $plnNextPicker.classList.add('open');
+  }
+
+  function hideNextPicker() {
+    $plnNextPicker?.classList.remove('open');
   }
 
   // ── Sidebar de planes ──────────────────────────────────────────────────────
@@ -1274,9 +1305,14 @@
       $plnDetailProgLbl   = document.getElementById('plnDetailProgLbl');
       $plnDetailNext      = document.getElementById('plnDetailNext');
       $plnDetailNextTitle = document.getElementById('plnDetailNextTitle');
+      $plnDetailNextEyebrow = document.getElementById('plnDetailNextEyebrow');
       $plnDetailPlanBadge = document.getElementById('plnDetailPlanBadge');
+      $plnNextPicker      = document.getElementById('plnNextPicker');
+      $plnNextPickList    = document.getElementById('plnNextPickList');
 
       document.getElementById('plnDetailBack')?.addEventListener('click', closeDetail);
+      document.getElementById('plnPickCancel')?.addEventListener('click', hideNextPicker);
+      $plnNextPicker?.addEventListener('click', ev => { if (ev.target === $plnNextPicker) hideNextPicker(); });
 
       document.getElementById('plnNewBtn')?.addEventListener('click', newPlan);
       document.getElementById('plnTaskBtn')?.addEventListener('click', () => setMode('task'));

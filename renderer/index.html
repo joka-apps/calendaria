@@ -402,14 +402,23 @@
             <!-- Lista de subtareas -->
             <div class="pln-det-items" id="plnDetailItems"></div>
 
-            <!-- Botón siguiente tarea -->
+            <!-- Botón siguiente paso -->
             <button class="pln-det-next" id="plnDetailNext" style="display:none">
               <div class="pdn-labels">
-                <span class="pdn-eyebrow">Siguiente tarea</span>
+                <span class="pdn-eyebrow" id="plnDetailNextEyebrow">Siguiente paso</span>
                 <span class="pdn-title" id="plnDetailNextTitle"></span>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+          </div>
+
+          <!-- Picker de rama cuando hay bifurcacion -->
+          <div class="pln-next-picker" id="plnNextPicker">
+            <div class="pln-next-pick-sheet">
+              <div class="pln-next-pick-hdr">Elige el siguiente paso</div>
+              <div class="pln-next-pick-list" id="plnNextPickList"></div>
+              <button class="pln-pick-cancel" id="plnPickCancel">Cancelar</button>
+            </div>
           </div>
         </div><!-- /pln-detail -->
 
