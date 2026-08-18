@@ -1655,6 +1655,12 @@ canvas {
 .pn-expand-bar:hover  { background: color-mix(in srgb, var(--pc) 10%, transparent); color: var(--pc); }
 .pn-expand-bar.open   { color: var(--pc); }
 
+/* Animacion al desplazar nodos por expansion de otro */
+@keyframes pn-slide-down { from { opacity:.6; transform: translateY(-16px); } to { opacity:1; transform: translateY(0); } }
+@keyframes pn-slide-up   { from { opacity:.6; transform: translateY(16px);  } to { opacity:1; transform: translateY(0); } }
+.pn-anim-down { animation: pn-slide-down .32s cubic-bezier(.4,0,.2,1) both; }
+.pn-anim-up   { animation: pn-slide-up   .32s cubic-bezier(.4,0,.2,1) both; }
+
 .pn-items-panel {
   display: flex; flex-direction: column; gap: 3px;
   padding: 6px 8px 4px;
@@ -1700,7 +1706,7 @@ canvas {
   height: 30px; margin-top: 2px; flex-shrink: 0;
 }
 .pn-add-inp {
-  flex: 1; border: 1px solid var(--border); border-radius: 6px;
+  flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 6px;
   background: var(--surface); color: var(--text);
   font-family: inherit; font-size: 11px; padding: 4px 6px;
   outline: none; transition: border-color .15s;

@@ -1516,35 +1516,43 @@ function showAuthOverlay() {
   window.Presupuesto?.init();
   window.Presupuesto?.load(allData['__presupuesto__'] ?? null);
 
+  function setViewHash(hash) { history.replaceState(null, '', hash || location.pathname); }
+
   document.getElementById('planesBtn')?.addEventListener('click', () => {
     const plansActive = document.getElementById('plansView')?.classList.contains('active');
     if (plansActive) {
-      window.Plans?.closeView();
+      window.Plans?.closeView(); setViewHash('');
     } else {
       if (document.getElementById('financeView').classList.contains('active')) closeFinanceView();
       if (document.getElementById('presupuestoView')?.classList.contains('active'))
         window.Presupuesto?.closeView();
-      window.Plans?.openView();
+      window.Plans?.openView(); setViewHash('#planes');
     }
   });
 
   document.getElementById('finanzasBtn')?.addEventListener('click', () => {
     const fv = document.getElementById('financeView');
-    if (fv.classList.contains('active')) closeFinanceView();
-    else openFinanceView();
+    if (fv.classList.contains('active')) { closeFinanceView(); setViewHash(''); }
+    else { openFinanceView(); setViewHash('#finanzas'); }
   });
 
   document.getElementById('presupuestoBtn')?.addEventListener('click', () => {
     const pv = document.getElementById('presupuestoView');
     if (pv?.classList.contains('active')) {
-      window.Presupuesto?.closeView();
+      window.Presupuesto?.closeView(); setViewHash('');
     } else {
       if (document.getElementById('financeView').classList.contains('active')) closeFinanceView();
       if (document.getElementById('plansView')?.classList.contains('active'))
         window.Plans?.closeView();
-      window.Presupuesto?.openView();
+      window.Presupuesto?.openView(); setViewHash('#presupuesto');
     }
   });
+
+  // Restaurar vista al recargar segun el hash de la URL
+  const initHash = window.location.hash;
+  if (initHash === '#planes') window.Plans?.openView();
+  else if (initHash === '#finanzas') openFinanceView();
+  else if (initHash === '#presupuesto') window.Presupuesto?.openView();
 
   const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const useDark = prefs.theme === 'dark' || (prefs.theme !== 'light' && sysDark);

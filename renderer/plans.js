@@ -25,6 +25,7 @@
   let $plnDetailNext, $plnDetailNextTitle, $plnDetailNextEyebrow, $plnDetailPlanBadge;
   let $plnNextPicker, $plnNextPickList;
   let $plnHdrWrap, $plnPlanDrop;
+  let pendingAnim = null; // { ids: Set, dir: 'down'|'up' }
 
   // ── Estado del panel de detalle ────────────────────────────────────────────
   let detailId = null; // id del nodo de tarea actualmente en el panel
@@ -215,6 +216,20 @@
     active.nodes.forEach(n => $world.insertBefore(buildNode(n), $svg));
     drawEdges();
     if (detailId) renderDetail();
+    // Animaciones de desplazamiento anti-solapamiento
+    if (pendingAnim) {
+      const { ids, dir } = pendingAnim;
+      pendingAnim = null;
+      const cls = dir === 'down' ? 'pn-anim-down' : 'pn-anim-up';
+      requestAnimationFrame(() => {
+        for (const id of ids) {
+          const el = $world.querySelector('[data-node-id="' + id + '"]');
+          if (!el) continue;
+          el.classList.add(cls);
+          el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+        }
+      });
+    }
   }
 
   function applyPZ() {
@@ -340,8 +355,19 @@
       expandBar.addEventListener('mousedown', ev => ev.stopPropagation());
       expandBar.addEventListener('click', ev => {
         ev.stopPropagation();
+        const oldH = nodeH(n);
         if (expanded.has(n.id)) expanded.delete(n.id);
         else expanded.add(n.id);
+        const delta = nodeH(n) - oldH;
+        if (delta !== 0 && active) {
+          const affected = new Set();
+          for (const other of active.nodes) {
+            if (other.id === n.id) continue;
+            const xOverlap = other.x < n.x + TW && other.x + TW > n.x;
+            if (xOverlap && other.y > n.y) { other.y += delta; affected.add(other.id); }
+          }
+          if (affected.size) { pendingAnim = { ids: affected, dir: delta > 0 ? 'down' : 'up' }; persist(); }
+        }
         redraw();
       });
       div.appendChild(expandBar);
