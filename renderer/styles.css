@@ -1865,16 +1865,24 @@ canvas {
 .pdn-title { font-size: 13.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Responsive: mobile / tablet ─────────────────────────────────────────── */
-@media (max-width: 700px) {
-  .plans-sidebar { width: 160px; min-width: 140px; }
+@media (max-width: 900px) {
+  .plans-sidebar { width: 170px; min-width: 150px; }
+  .pln-detail.active { width: 270px; }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 760px) {
+  .plans-sidebar { width: 140px; min-width: 120px; }
+  .plans-sidebar-title { font-size: 11px; }
+  .pln-detail.active { width: 240px; }
+}
+
+@media (max-width: 680px) {
   .plans-sidebar { display: none; }
   .plans-view { flex-direction: column; }
-  .plans-canvas-row { flex-direction: column; }
+  .plans-canvas-row { flex-direction: column; position: relative; flex: 1; min-height: 0; }
+  .plans-wrap { flex: 1 1 auto; }
 
-  /* En mobile el detail es un bottom-sheet */
+  /* En mobile/tablet el detail es un bottom-sheet */
   .pln-detail {
     width: 100% !important;
     height: 0; flex-shrink: 0;
@@ -1885,9 +1893,7 @@ canvas {
     transition: height .3s cubic-bezier(.4,0,.2,1);
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
   }
-  .pln-detail.active { height: 72vh; }
-  .plans-canvas-row { position: relative; flex: 1; min-height: 0; }
-  .plans-wrap { flex: 1 1 auto; }
+  .pln-detail.active { height: 72vh; width: 100% !important; }
 
   .pln-det-mini { height: 100px; }
   .pln-det-title { font-size: 18px; }
@@ -2509,5 +2515,4 @@ canvas {
   .right-col { min-height: 420px; }
   .panel-col { min-height: 420px; }
   .home-view { min-height: 380px; }
-  .plans-sidebar { width: 160px; }
 }
